@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cabutan Kupon 🎊</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink:    #F48FB1;
+  --pink2:   #E91E8C;
+  --pinkdark:#880E4F;
+  --gold:    #FFD700;
+  --gold2:   #FFA000;
+  --bg:      #1a0520;
+  --card:    #2d0a3a;
+  --green:   #00C853;
+  --cyan:    #00E5FF;
+  --red:     #FF5252;
+  --cream:   #FFF8E1;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 40% at 50% 0%, #3d0a5544 0%, transparent 70%);
+  min-height: 100vh;
+  overflow-x: hidden;
+  padding-bottom: 40px;
+}
+
+/* ===== HEADER ===== */
+.header {
+  text-align: center;
+  padding: 20px 10px 12px;
+  background: linear-gradient(180deg, #2d0a3a 0%, transparent 100%);
+  position: sticky; top: 0; z-index: 50;
+  backdrop-filter: blur(6px);
+}
+.header h1 {
+  font-family: 'Lilita One', cursive;
+  font-size: clamp(1.6rem, 5vw, 2.5rem);
+  color: var(--gold);
+  text-shadow: 0 0 20px #FFD70066, 2px 3px 0 #7a3d00;
+  letter-spacing: 1px;
+}
+.stats-row {
+  display: flex; justify-content: center; gap: 12px;
+  flex-wrap: wrap; margin-top: 8px;
+}
+.stat-chip {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex; align-items: center; gap: 5px;
+  color: var(--cream);
+}
+.stat-chip .dot { width:8px;height:8px;border-radius:50%; }
+
+/* ===== PRIZE LEGEND ===== */
+.legend {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+  padding: 8px 12px 4px;
+}
+.leg-item {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.75rem; font-weight: 700; color: var(--cream);
+}
+.leg-item .dot { width:8px;height:8px;border-radius:50%; }
+.leg-item .rem { opacity:0.5; font-size:0.68rem; margin-left:2px; }
+
+/* ===== GRID ===== */
+.grid-wrap {
+  max-width: 700px;
+  margin: 14px auto 0;
+  padding: 0 10px;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 5px;
+}
+
+/* ===== KUPON ===== */
+.kupon {
+  aspect-ratio: 0.55 / 1;
+  border-radius: 6px;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.15s;
+  /* fold shadow at bottom to mimic stacked coupons */
+  box-shadow:
+    0 2px 0 1px #cc3070,
+    0 4px 0 2px #aa2060,
+    0 6px 0 3px #881850,
+    0 2px 8px #00000088;
+}
+.kupon:hover:not(.opened):not(.flipping) {
+  transform: translateY(-4px) scale(1.06);
+  z-index: 5;
+}
+.kupon.flipping { pointer-events: none; }
+
+/* FRONT face (pink folded kupon) */
+.kupon-front, .kupon-back {
+  position: absolute; inset: 0;
+  border-radius: 6px;
+  backface-visibility: hidden;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+
+/* The 3D flip container */
+.kupon-inner {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.kupon.opened .kupon-inner { transform: rotateY(180deg); }
+
+/* FRONT */
+.kupon-front {
+  background: linear-gradient(160deg, #F48FB1 0%, #E91E8C 60%, #C2185B 100%);
+  border: 2px solid #F48FB1;
+}
+/* Wavy lines like real coupon */
+.kupon-front::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent, transparent 3px,
+    rgba(255,255,255,0.08) 3px, rgba(255,255,255,0.08) 4px
+  );
+  border-radius: 6px;
+}
+.kupon-front::after {
+  content: '';
+  position: absolute; top:3px; left:3px; right:3px;
+  height: 40%;
+  background: rgba(255,255,255,0.12);
+  border-radius: 4px 4px 50% 50%;
+}
+.kupon-num {
+  font-family: 'Lilita One', cursive;
+  font-size: clamp(0.6rem, 1.5vw, 0.9rem);
+  color: white;
+  text-shadow: 0 1px 3px #00000066;
+  z-index: 2;
+  line-height: 1;
+}
+.kupon-label {
+  font-size: clamp(0.38rem, 0.9vw, 0.55rem);
+  color: rgba(255,255,255,0.75);
+  z-index: 2;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 1px;
+}
+
+/* BACK */
+.kupon-back {
+  background: var(--card);
+  transform: rotateY(180deg);
+  border: 2px solid transparent;
+  gap: 2px;
+  padding: 3px;
+}
+.kupon-back-emoji {
+  font-size: clamp(0.9rem, 2.5vw, 1.4rem);
+  line-height: 1;
+}
+.kupon-back-amount {
+  font-family: 'Lilita One', cursive;
+  font-size: clamp(0.45rem, 1.2vw, 0.72rem);
+  text-align: center;
+  line-height: 1.1;
+}
+.kupon-back-num {
+  font-size: clamp(0.32rem, 0.8vw, 0.5rem);
+  color: rgba(255,255,255,0.4);
+}
+
+/* ===== RESULT MODAL ===== */
+.modal-bg {
+  position: fixed; inset:0;
+  background: rgba(0,0,0,0.82);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  opacity:0; pointer-events:none;
+  transition: opacity 0.3s;
+}
+.modal-bg.show { opacity:1; pointer-events:all; }
+.modal {
+  background: linear-gradient(160deg, #2d0a3a, #1a0520);
+  border-radius: 28px;
+  padding: 2.2rem 2rem;
+  max-width: 340px; width: 90%;
+  text-align: center;
+  transform: scale(0.75) translateY(30px);
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 0 60px rgba(255,215,0,0.25), 0 20px 60px #00000099;
+  position: relative; overflow: hidden;
+}
+.modal-bg.show .modal { transform: scale(1) translateY(0); }
+.modal::before {
+  content:''; position:absolute; top:0;left:0;right:0; height:3px;
+  background: linear-gradient(to right, var(--pink2), var(--gold), var(--cyan));
+}
+.modal-emoji { font-size: 3.5rem; animation: popBounce 0.5s ease; }
+@keyframes popBounce {
+  0%   { transform: scale(0) rotate(-20deg); }
+  60%  { transform: scale(1.25) rotate(8deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.modal-kupon-no {
+  font-size: 0.8rem; color: rgba(255,255,255,0.4);
+  margin: 6px 0 2px; letter-spacing: 2px; text-transform: uppercase;
+}
+.modal-congrats {
+  font-size: 0.85rem; color: var(--pink);
+  letter-spacing: 1px; font-weight: 700; margin-bottom: 4px;
+}
+.modal-amount {
+  font-family: 'Lilita One', cursive;
+  font-size: clamp(2rem, 9vw, 3.2rem);
+  line-height: 1;
+  margin: 4px 0 16px;
+}
+.btn-tutup {
+  font-family: 'Lilita One', cursive;
+  font-size: 1.05rem;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: #1a0520;
+  border: none; border-radius: 50px;
+  padding: 0.65rem 2.2rem;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #7a4000;
+  transition: all 0.15s;
+}
+.btn-tutup:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #7a4000; }
+.btn-tutup:active { transform: translateY(2px); box-shadow: 0 2px 0 #7a4000; }
+
+/* Done banner */
+.done-banner {
+  display: none;
+  text-align: center;
+  padding: 20px;
+  font-family: 'Lilita One', cursive;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  color: var(--gold);
+  text-shadow: 0 0 20px #FFD70088;
+  animation: fadeUp 0.6s ease;
+}
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(20px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* confetti canvas */
+#confetti { position:fixed;inset:0;pointer-events:none;z-index:300; }
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>🎊 CABUTAN BERHADIAH 🎊</h1>
+  <div class="stats-row" id="statsRow"></div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend" id="legend"></div>
+
+<!-- GRID 100 KUPON -->
+<div class="grid-wrap" id="grid"></div>
+
+<!-- DONE -->
+<div class="done-banner" id="doneBanner">🎉 Semua Kupon Sudah Dicabut! 🎉</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-emoji" id="modEmoji">🎉</div>
+    <div class="modal-kupon-no" id="modNo">Kupon No. —</div>
+    <div class="modal-congrats">🎊 Selamat! Kamu dapat</div>
+    <div class="modal-amount" id="modAmount">—</div>
+    <button class="btn-tutup" onclick="closeModal()">Tutup ✓</button>
+  </div>
+</div>
+
+<script>
+// ===== PRIZE CONFIG =====
+const TIERS = [
+  { label:'Rp 100.000', short:'100K', amount:100000, count:3,  color:'#FFD700', emoji:'🤑', textColor:'#FFD700' },
+  { label:'Rp 50.000',  short:'50K',  amount:50000,  count:4,  color:'#FF6B9D', emoji:'😍', textColor:'#FF6B9D' },
+  { label:'Rp 20.000',  short:'20K',  amount:20000,  count:5,  color:'#00E5FF', emoji:'😄', textColor:'#00E5FF' },
+  { label:'Rp 10.000',  short:'10K',  amount:10000,  count:10, color:'#00E676', emoji:'😊', textColor:'#00E676' },
+  { label:'Rp 5.000',   short:'5K',   amount:5000,   count:10, color:'#CE93D8', emoji:'🙂', textColor:'#CE93D8' },
+  { label:'Rp 2.000',   short:'2K',   amount:2000,   count:68, color:'#90A4AE', emoji:'😁', textColor:'#90A4AE' },
+];
+const TOTAL = 100;
+
+// ===== BUILD POOL =====
+function buildPool(){
+  const pool=[];
+  TIERS.forEach(t=>{ for(let i=0;i<t.count;i++) pool.push({...t}); });
+  for(let i=pool.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [pool[i],pool[j]]=[pool[j],pool[i]];
+  }
+  return pool;
+}
+let pool = buildPool();
+let opened = 0;
+let tierRemaining = TIERS.map(t=>t.count);
+
+// ===== LEGEND =====
+function renderLegend(){
+  const leg = document.getElementById('legend');
+  leg.innerHTML='';
+  TIERS.forEach((t,i)=>{
+    const d=document.createElement('div');
+    d.className='leg-item'; d.id='leg-'+i;
+    d.innerHTML=`<div class="dot" style="background:${t.color}"></div>${t.emoji} ${t.short} <span class="rem" id="legrem-${i}">×${tierRemaining[i]}</span>`;
+    leg.appendChild(d);
+  });
+}
+renderLegend();
+
+// ===== STATS =====
+function renderStats(){
+  const s=document.getElementById('statsRow');
+  s.innerHTML=`
+    <div class="stat-chip"><div class="dot" style="background:#00E676"></div>Dibuka: ${opened}</div>
+    <div class="stat-chip"><div class="dot" style="background:#F48FB1"></div>Sisa: ${TOTAL-opened}</div>
+  `;
+}
+renderStats();
+
+// ===== GRID =====
+const grid = document.getElementById('grid');
+const kupons = [];
+
+for(let i=0;i<TOTAL;i++){
+  const prize = pool[i];
+  const no = i+1;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'kupon';
+  wrapper.id = 'kupon-'+i;
+
+  wrapper.innerHTML = `
+    <div class="kupon-inner">
+      <div class="kupon-front">
+        <div class="kupon-num">${no}</div>
+        <div class="kupon-label">CABUT</div>
+      </div>
+      <div class="kupon-back" style="border-color:${prize.color}22; box-shadow: inset 0 0 12px ${prize.color}22">
+        <div class="kupon-back-emoji">${prize.emoji}</div>
+        <div class="kupon-back-amount" style="color:${prize.textColor}">${prize.short}</div>
+        <div class="kupon-back-num">#${no}</div>
+      </div>
+    </div>
+  `;
+
+  wrapper.addEventListener('click', ()=>openKupon(i, no, prize, wrapper));
+  grid.appendChild(wrapper);
+  kupons.push(wrapper);
+}
+
+// ===== OPEN KUPON =====
+let isAnimating = false;
+
+// ===== SOUND ENGINE - Expressive Audio =====
+let _actx = null;
+function getACtx(){
+  if(!_actx){
+    try{ _actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+  }
+  // resume if suspended (browser autoplay policy)
+  if(_actx && _actx.state === 'suspended') _actx.resume();
+  return _actx;
+}
+
+function note(freq, startT, dur, vol, type, freqEnd){
+  const a = getACtx(); if(!a) return;
+  const osc = a.createOscillator();
+  const gain = a.createGain();
+  osc.connect(gain); gain.connect(a.destination);
+  osc.type = type || 'sine';
+  osc.frequency.setValueAtTime(freq, a.currentTime + startT);
+  if(freqEnd) osc.frequency.linearRampToValueAtTime(freqEnd, a.currentTime + startT + dur);
+  gain.gain.setValueAtTime(0.001, a.currentTime + startT);
+  gain.gain.linearRampToValueAtTime(vol, a.currentTime + startT + 0.02);
+  gain.gain.setValueAtTime(vol, a.currentTime + startT + dur * 0.7);
+  gain.gain.linearRampToValueAtTime(0.001, a.currentTime + startT + dur);
+  osc.start(a.currentTime + startT);
+  osc.stop(a.currentTime + startT + dur + 0.05);
+}
+
+function soundFlip(){
+  note(1000, 0, 0.04, 0.08, 'square');
+}
+
+// "YEAY!" — 3 nada naik cepat + bunyi seru
+function soundYeay(){
+  getACtx(); // ensure resumed
+  // melodi naik seperti "ye-ay!"
+  note(400, 0.00, 0.12, 0.5, 'sine', 600);   // "ye" naik
+  note(600, 0.10, 0.10, 0.5, 'sine', 500);   // "e" turun sedikit
+  note(700, 0.18, 0.18, 0.6, 'sine', 900);   // "ay!" naik tajam
+  // harmoni ceria
+  note(800, 0.00, 0.12, 0.2, 'triangle', 1000);
+  note(1000,0.18, 0.18, 0.2, 'triangle', 1200);
+  // perkusi ting
+  note(2000,0.36, 0.1,  0.15,'triangle');
+  note(2500,0.40, 0.08, 0.1, 'triangle');
+}
+
+// "HOREEEE!" — fanfare meriah panjang
+function soundHoree(){
+  getACtx();
+  // melodi "ho-re-eee"
+  note(350, 0.00, 0.14, 0.6, 'sine', 300);   // "ho" turun
+  note(500, 0.12, 0.10, 0.6, 'sine', 600);   // "re" naik
+  note(650, 0.20, 0.35, 0.7, 'sine', 900);   // "eee" naik panjang
+  // harmoni bawah
+  note(175, 0.00, 0.14, 0.3, 'triangle', 150);
+  note(250, 0.12, 0.10, 0.3, 'triangle', 300);
+  note(325, 0.20, 0.35, 0.35,'triangle', 450);
+  // chord meriah di atas
+  note(1300,0.20, 0.3,  0.2, 'sine', 1600);
+  note(1600,0.25, 0.3,  0.15,'sine', 2000);
+  // bass thump
+  note(80,  0.00, 0.2,  0.4, 'sawtooth', 60);
+  note(100, 0.20, 0.2,  0.35,'sawtooth', 80);
+  // perkusi ting ting ting
+  note(3000,0.30, 0.08, 0.15,'triangle');
+  note(3500,0.36, 0.08, 0.15,'triangle');
+  note(4000,0.42, 0.1,  0.2, 'triangle');
+  note(4500,0.50, 0.12, 0.2, 'triangle');
+}
+
+function openKupon(idx, no, prize, el){
+  if(isAnimating || el.classList.contains('opened') || el.classList.contains('flipping')) return;
+  isAnimating = true;
+  el.classList.add('flipping');
+
+  if(navigator.vibrate) navigator.vibrate(30);
+  soundFlip();
+
+  setTimeout(()=>{
+    el.classList.add('opened');
+    el.classList.remove('flipping');
+    isAnimating = false; // bebas segera setelah flip selesai
+    opened++;
+
+    // update tier remaining — guard supaya tidak negatif
+    const ti = TIERS.findIndex(t=>t.amount===prize.amount);
+    if(ti>=0 && tierRemaining[ti]>0){
+      tierRemaining[ti]--;
+      const remEl = document.getElementById('legrem-'+ti);
+      if(remEl) remEl.textContent = '×'+tierRemaining[ti];
+    }
+
+    renderStats();
+
+    setTimeout(()=>{
+      showModal(no, prize);
+      if(opened===TOTAL){
+        setTimeout(()=>{
+          document.getElementById('doneBanner').style.display='block';
+        }, 1200);
+      }
+    }, 300);
+  }, 80);
+}
+
+// ===== MODAL =====
+function showModal(no, prize){
+  document.getElementById('modEmoji').textContent = prize.emoji;
+  document.getElementById('modNo').textContent = `Kupon No. ${no}`;
+  document.getElementById('modAmount').textContent = prize.label;
+  document.getElementById('modAmount').style.color = prize.color;
+  document.getElementById('modAmount').style.textShadow = `0 0 20px ${prize.color}88`;
+  document.getElementById('modalBg').classList.add('show');
+
+  // sound + confetti based on prize
+  if(prize.amount >= 20000){
+    soundHoree();
+    launchConfetti(prize.color);
+  } else {
+    soundYeay();
+  }
+}
+
+function closeModal(){
+  document.getElementById('modalBg').classList.remove('show');
+  if(crun) stopConfetti();
+}
+
+// ===== CONFETTI =====
+const cc = document.getElementById('confetti');
+const cx = cc.getContext('2d');
+let cparts=[], crun=false, craf=null;
+
+function resizeCC(){ cc.width=window.innerWidth; cc.height=window.innerHeight; }
+resizeCC(); window.addEventListener('resize',resizeCC);
+
+const CCOLORS=['#FFD700','#FF6B9D','#00E5FF','#00E676','#CE93D8','#ffffff','#FFA000'];
+
+function launchConfetti(mainColor){
+  cparts=[];
+  for(let i=0;i<90;i++){
+    cparts.push({
+      x: Math.random()*cc.width, y:-10-Math.random()*150,
+      vx:(Math.random()-0.5)*5, vy:2+Math.random()*4,
+      size:5+Math.random()*7,
+      color: Math.random()<0.4 ? mainColor : CCOLORS[Math.floor(Math.random()*CCOLORS.length)],
+      angle:Math.random()*Math.PI*2,
+      spin:(Math.random()-0.5)*0.18,
+      shape:Math.random()>0.5?'rect':'circle'
+    });
+  }
+  crun=true; animCC();
+}
+function animCC(){
+  if(!crun){ cx.clearRect(0,0,cc.width,cc.height); return; }
+  cx.clearRect(0,0,cc.width,cc.height);
+  cparts.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.07; p.angle+=p.spin;
+    cx.save(); cx.translate(p.x,p.y); cx.rotate(p.angle);
+    cx.fillStyle=p.color;
+    if(p.shape==='rect') cx.fillRect(-p.size/2,-p.size/4,p.size,p.size/2);
+    else { cx.beginPath(); cx.arc(0,0,p.size/2,0,Math.PI*2); cx.fill(); }
+    cx.restore();
+  });
+  cparts=cparts.filter(p=>p.y<cc.height+20);
+  if(cparts.length>0) craf=requestAnimationFrame(animCC);
+  else { crun=false; cx.clearRect(0,0,cc.width,cc.height); }
+}
+function stopConfetti(){ crun=false; cancelAnimationFrame(craf); cx.clearRect(0,0,cc.width,cc.height); }
+
+  // Resume AudioContext on first user interaction (mobile requirement)
+  document.addEventListener('touchstart', function(){
+    if(_actx && _actx.state==='suspended') _actx.resume();
+  }, {once:false});
+  document.addEventListener('click', function(){
+    if(_actx && _actx.state==='suspended') _actx.resume();
+  }, {once:false});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🐍 Ular Tangga Seru</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a0533;
+  --card:#ffffff0d;
+  --border:#ffffff18;
+  --gold:#FFD700;
+  --silver:#C0C0C0;
+  --bronze:#CD7F32;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100vh;font-family:'Nunito',sans-serif;background:var(--bg);color:#fff;overflow-x:hidden;}
+
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 60% at 20% 20%,rgba(138,43,226,.25) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 60% at 80% 80%,rgba(255,107,53,.15) 0%,transparent 60%);
+}
+
+/* ── HEADER ── */
+header{
+  text-align:center;padding:20px 16px 10px;position:relative;
+}
+.game-title{
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(1.8rem,5vw,2.8rem);
+  background:linear-gradient(135deg,#FF6B35,#FFD700,#FF6B35);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 12px rgba(255,165,0,.4));
+  letter-spacing:2px;
+}
+.game-sub{font-size:.65rem;font-weight:800;letter-spacing:4px;color:rgba(255,255,255,.35);margin-top:2px;}
+
+/* ── LAYOUT ── */
+.layout{
+  display:flex;gap:12px;padding:10px 12px 20px;
+  max-width:1000px;margin:0 auto;
+  flex-wrap:wrap;justify-content:center;
+}
+
+/* ── PANEL ── */
+.panel{
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:20px;padding:14px;backdrop-filter:blur(8px);
+}
+
+/* ── SETUP PANEL ── */
+.setup-panel{width:200px;display:flex;flex-direction:column;gap:8px;}
+.panel-title{
+  font-family:'Fredoka One',cursive;font-size:1rem;letter-spacing:1px;
+  color:rgba(255,255,255,.7);margin-bottom:4px;
+}
+
+.count-row{display:flex;align-items:center;gap:8px;justify-content:space-between;}
+.count-btn{
+  width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.08);color:#fff;font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.count-btn:hover{background:rgba(255,255,255,.18);}
+.count-val{font-family:'Fredoka One',cursive;font-size:1.5rem;color:#FFD700;}
+
+.player-inp{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);
+  border-radius:10px;padding:5px 8px;transition:border-color .2s;
+}
+.player-inp:focus-within{border-color:rgba(255,165,0,.5);}
+.player-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.player-inp input{
+  background:none;border:none;outline:none;color:#fff;
+  font-family:'Nunito',sans-serif;font-weight:700;font-size:.8rem;width:100%;
+}
+.player-inp input::placeholder{color:rgba(255,255,255,.3);}
+
+.start-btn{
+  font-family:'Fredoka One',cursive;font-size:1.1rem;letter-spacing:2px;
+  background:linear-gradient(135deg,#FF6B35,#FF3CAC);
+  border:none;border-radius:50px;padding:11px;color:#fff;cursor:pointer;
+  box-shadow:0 4px 20px rgba(255,107,53,.4);transition:all .15s;margin-top:4px;
+}
+.start-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(255,107,53,.6);}
+.start-btn:active{transform:translateY(1px);}
+
+/* ── BOARD ── */
+.board-panel{padding:10px;}
+#board{border-radius:14px;display:block;max-width:100%;height:auto;}
+
+/* ── CONTROL PANEL ── */
+.ctrl-panel{width:180px;display:flex;flex-direction:column;gap:10px;align-items:center;}
+
+/* Dice */
+.dice-wrap{
+  background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.12);
+  border-radius:16px;padding:14px;width:100%;text-align:center;
+}
+#dice{
+  font-size:3.5rem;line-height:1;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.4));
+  transition:transform .1s;display:block;
+}
+.dice-result{
+  font-family:'Fredoka One',cursive;font-size:1rem;color:rgba(255,255,255,.5);
+  margin-top:4px;min-height:1.2em;
+}
+
+.roll-btn{
+  font-family:'Fredoka One',cursive;font-size:1.2rem;letter-spacing:1px;
+  background:linear-gradient(135deg,#4CAF50,#2E7D32);
+  border:none;border-radius:50px;padding:12px;color:#fff;cursor:pointer;
+  box-shadow:0 4px 16px rgba(76,175,80,.4);transition:all .15s;width:100%;
+}
+.roll-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(76,175,80,.6);}
+.roll-btn:active:not(:disabled){transform:translateY(2px);}
+.roll-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.reset-btn{
+  font-family:'Fredoka One',cursive;font-size:.9rem;
+  background:rgba(244,67,54,.15);border:1.5px solid rgba(244,67,54,.3);
+  border-radius:50px;padding:8px;color:#ff5252;cursor:pointer;width:100%;
+  transition:all .15s;
+}
+.reset-btn:hover{background:rgba(244,67,54,.25);}
+
+/* Turn info */
+.turn-box{
+  background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);
+  border-radius:14px;padding:10px;width:100%;text-align:center;
+}
+.turn-lbl{font-size:.5rem;font-weight:800;letter-spacing:3px;color:rgba(255,255,255,.35);}
+.turn-name{font-family:'Fredoka One',cursive;font-size:1.1rem;color:#FFD700;margin-top:2px;min-height:1.4em;}
+
+/* Score list */
+.score-list{width:100%;}
+.score-row{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:10px;padding:6px 8px;margin-bottom:5px;
+}
+.score-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.score-name{font-size:.75rem;font-weight:800;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.score-pos{font-family:'Fredoka One',cursive;font-size:1rem;color:#fff;margin-left:auto;}
+.score-bar-wrap{width:100%;height:3px;background:rgba(255,255,255,.08);border-radius:3px;margin-top:3px;}
+.score-bar{height:3px;border-radius:3px;transition:width .6s ease;}
+
+/* ── MODALS ── */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);
+  display:none;align-items:center;justify-content:center;z-index:999;
+  backdrop-filter:blur(4px);padding:16px;
+}
+.overlay.show{display:flex;}
+.popup{
+  background:linear-gradient(135deg,#1e0840,#2d1060);
+  border:2px solid rgba(255,255,255,.15);
+  border-radius:24px;padding:24px 20px;text-align:center;
+  width:100%;max-width:360px;
+  animation:popIn .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* Event popup */
+.event-icon{font-size:3rem;display:block;margin-bottom:8px;}
+.event-title{font-family:'Fredoka One',cursive;font-size:1.8rem;}
+.event-desc{font-size:.85rem;font-weight:700;color:rgba(255,255,255,.6);margin-top:4px;}
+
+/* Podium */
+.podium-title{
+  font-family:'Fredoka One',cursive;font-size:2rem;
+  background:linear-gradient(135deg,var(--gold),#fff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:16px;
+}
+.podium{
+  display:flex;align-items:flex-end;justify-content:center;
+  gap:8px;margin:12px 0 20px;
+}
+.podium-slot{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  min-width:80px;
+}
+.podium-avatar{
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fredoka One',cursive;font-size:1.4rem;
+  border:3px solid;box-shadow:0 4px 16px rgba(0,0,0,.4);
+}
+.podium-pname{font-size:.72rem;font-weight:800;text-align:center;max-width:80px;word-break:break-word;}
+.podium-block{
+  width:72px;border-radius:10px 10px 0 0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fredoka One',cursive;font-size:1.5rem;
+}
+.p1 .podium-avatar{border-color:var(--gold);background:rgba(255,215,0,.15);}
+.p1 .podium-block{height:80px;background:linear-gradient(180deg,rgba(255,215,0,.3),rgba(255,215,0,.1));border:1.5px solid rgba(255,215,0,.4);}
+.p2 .podium-avatar{border-color:var(--silver);background:rgba(192,192,192,.15);}
+.p2 .podium-block{height:60px;background:linear-gradient(180deg,rgba(192,192,192,.25),rgba(192,192,192,.08));border:1.5px solid rgba(192,192,192,.3);}
+.p3 .podium-avatar{border-color:var(--bronze);background:rgba(205,127,50,.15);}
+.p3 .podium-block{height:44px;background:linear-gradient(180deg,rgba(205,127,50,.25),rgba(205,127,50,.08));border:1.5px solid rgba(205,127,50,.3);}
+
+.other-ranks{width:100%;margin-bottom:14px;}
+.other-row{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.05);border-radius:10px;padding:7px 10px;margin-bottom:5px;
+}
+.other-rank-num{font-family:'Fredoka One',cursive;font-size:.9rem;color:rgba(255,255,255,.4);width:20px;}
+.other-dot{width:10px;height:10px;border-radius:50%;}
+.other-name{font-size:.8rem;font-weight:800;flex:1;}
+.other-pos{font-family:'Fredoka One',cursive;font-size:.85rem;color:rgba(255,255,255,.4);}
+
+.play-again-btn{
+  font-family:'Fredoka One',cursive;font-size:1.2rem;letter-spacing:2px;
+  background:linear-gradient(135deg,#FF6B35,#FF3CAC);
+  border:none;border-radius:50px;padding:12px 40px;color:#fff;cursor:pointer;
+  box-shadow:0 4px 20px rgba(255,107,53,.4);transition:all .15s;margin-right:8px;
+}
+.play-again-btn:hover{transform:translateY(-2px);}
+
+/* confetti */
+#confCv{position:fixed;inset:0;pointer-events:none;z-index:998;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .setup-panel,.ctrl-panel{width:100%;}
+  .layout{flex-direction:column;align-items:center;}
+  .ctrl-panel{flex-direction:row;flex-wrap:wrap;justify-content:center;}
+  .dice-wrap{width:140px;}
+  .roll-btn,.reset-btn,.turn-box,.score-list{width:auto;flex:1;min-width:130px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="game-title">🐍 ULAR TANGGA 🪜</div>
+  <div class="game-sub">SIAPA DULUAN KE 100?</div>
+</header>
+
+<div class="layout">
+
+  <!-- SETUP -->
+  <div class="panel setup-panel">
+    <div class="panel-title">👥 Pemain</div>
+    <div class="count-row">
+      <button class="count-btn" onclick="changeCount(-1)">−</button>
+      <span class="count-val" id="countVal">2</span>
+      <button class="count-btn" onclick="changeCount(1)">+</button>
+    </div>
+    <div id="playerInputs"></div>
+    <button class="start-btn" onclick="startGame()">▶ MULAI!</button>
+    <button class="reset-btn" onclick="resetGame()">🔄 Reset</button>
+  </div>
+
+  <!-- BOARD -->
+  <div class="panel board-panel">
+    <canvas id="board" width="520" height="520"></canvas>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="panel ctrl-panel">
+    <div class="dice-wrap">
+      <span id="dice">🎲</span>
+      <div class="dice-result" id="diceResult">—</div>
+    </div>
+    <button class="roll-btn" id="rollBtn" onclick="rollDice()" disabled>🎲 Lempar Dadu</button>
+    <div class="turn-box">
+      <div class="turn-lbl">GILIRAN</div>
+      <div class="turn-name" id="turnName">—</div>
+    </div>
+    <div class="score-list" id="scoreList"></div>
+  </div>
+</div>
+
+<!-- Event Overlay -->
+<div class="overlay" id="eventOverlay">
+  <div class="popup">
+    <span class="event-icon" id="eventIcon"></span>
+    <div class="event-title" id="eventTitle"></div>
+    <div class="event-desc" id="eventDesc"></div>
+  </div>
+</div>
+
+<!-- Win Overlay -->
+<div class="overlay" id="winOverlay">
+  <div class="popup">
+    <div class="podium-title">🏆 HASIL AKHIR</div>
+    <div class="podium" id="podium"></div>
+    <div class="other-ranks" id="otherRanks"></div>
+    <button class="play-again-btn" onclick="playAgain()">🔄 Main Lagi</button>
+  </div>
+</div>
+
+<canvas id="confCv"></canvas>
+
+<script>
+// =============================================
+// COLORS
+// =============================================
+const PLAYER_COLORS = ['#FF5252','#448AFF','#69F0AE','#FFD740','#E040FB'];
+const PLAYER_EMOJIS = ['🔴','🔵','🟢','🟡','🟣'];
+const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+// =============================================
+// BOARD DATA
+// =============================================
+const LADDERS = {4:14, 9:31, 20:42, 51:67, 72:91};
+const SNAKES  = {17:7, 32:10, 48:30, 62:45, 75:54, 88:66, 97:79};
+const CELL = 52;
+const BOARD_SIZE = 520;
+
+// =============================================
+// STATE
+// =============================================
+let playerCount = 2;
+let players = [], positions = [], finished = [];
+let turn = 0, gameActive = false;
+let rolling = false;
+
+// =============================================
+// AUDIO
+// =============================================
+let _ac = null;
+function ac(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume();return _ac;}
+function beep(f,d,t,v,dl){try{const a=ac(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type=t||'sine';o.frequency.setValueAtTime(f,a.currentTime+(dl||0));g.gain.setValueAtTime(v||.3,a.currentTime+(dl||0));g.gain.exponentialRampToValueAtTime(.001,a.currentTime+(dl||0)+d);o.start(a.currentTime+(dl||0));o.stop(a.currentTime+(dl||0)+d+.05);}catch(e){}}
+function sndDice(){beep(300,.1,'triangle',.2);beep(200,.15,'triangle',.15,.08);}
+function sndLadder(){[400,600,800,1000].forEach((f,i)=>beep(f,.1,'sine',.25,i*.07));}
+function sndSnake(){beep(400,.15,'sawtooth',.3);beep(250,.2,'sawtooth',.25,.1);beep(150,.3,'sawtooth',.2,.2);}
+function sndWin(){for(let i=0;i<6;i++)setTimeout(()=>{beep(600+i*120,.15,'triangle',.3);},i*120);}
+function sndMove(){beep(660,.05,'triangle',.15);}
+
+// =============================================
+// SETUP UI
+// =============================================
+function buildInputs(){
+  const wrap = document.getElementById('playerInputs');
+  wrap.innerHTML = '';
+  for(let i = 0; i < playerCount; i++){
+    const existing = players[i]?.name || '';
+    const div = document.createElement('div');
+    div.className = 'player-inp';
+    div.innerHTML = `<div class="player-dot" style="background:${PLAYER_COLORS[i]}"></div>
+      <input placeholder="Pemain ${i+1}" value="${existing}" maxlength="12">`;
+    wrap.appendChild(div);
+  }
+}
+
+function changeCount(d){
+  playerCount = Math.max(2, Math.min(5, playerCount + d));
+  document.getElementById('countVal').textContent = playerCount;
+  buildInputs();
+}
+
+// =============================================
+// BOARD DRAWING
+// =============================================
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+
+function cellXY(n){
+  // 1-100, bottom-left = 1
+  const row = Math.floor((n-1)/10);
+  let col = (n-1) % 10;
+  if(row % 2 === 1) col = 9 - col;
+  const x = col * CELL;
+  const y = (9 - row) * CELL;
+  return {x, y};
+}
+function cellCenter(n){ const {x,y}=cellXY(n); return {x:x+CELL/2,y:y+CELL/2}; }
+
+// Color palettes for rows
+const ROW_COLORS = [
+  ['#1a237e','#283593'],['#1b5e20','#2e7d32'],
+  ['#4a148c','#6a1b9a'],['#bf360c','#d84315'],
+  ['#004d40','#00695c'],['#0d47a1','#1565c0'],
+  ['#4e342e','#6d4c41'],['#1a237e','#283593'],
+  ['#1b5e20','#2e7d32'],['#311b92','#4527a0'],
+];
+
+function drawBoard(){
+  ctx.clearRect(0,0,BOARD_SIZE,BOARD_SIZE);
+
+  // cells
+  for(let n=1;n<=100;n++){
+    const {x,y} = cellXY(n);
+    const row = Math.floor((n-1)/10);
+    const col = (n-1) % 10;
+    const isEven = (row+col)%2===0;
+    const [c1,c2] = ROW_COLORS[row];
+
+    // cell bg with gradient
+    const grad = ctx.createLinearGradient(x,y,x+CELL,y+CELL);
+    grad.addColorStop(0, isEven ? c1+'cc' : c2+'cc');
+    grad.addColorStop(1, isEven ? c2+'99' : c1+'99');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x,y,CELL,CELL);
+
+    // cell border
+    ctx.strokeStyle = 'rgba(255,255,255,.12)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x,y,CELL,CELL);
+
+    // number
+    ctx.font = 'bold 10px Nunito,sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(n, x+3, y+2);
+
+    // special cell highlight
+    if(LADDERS[n]){
+      ctx.fillStyle = 'rgba(76,175,80,.25)';
+      ctx.fillRect(x,y,CELL,CELL);
+    }
+    if(SNAKES[n]){
+      ctx.fillStyle = 'rgba(244,67,54,.2)';
+      ctx.fillRect(x,y,CELL,CELL);
+    }
+  }
+
+  drawLadders();
+  drawSnakes();
+  draw100Star();
+}
+
+function drawLadders(){
+  for(const [from, to] of Object.entries(LADDERS)){
+    const a = cellCenter(+from);
+    const b = cellCenter(+to);
+
+    // ladder rails
+    const angle = Math.atan2(b.y-a.y, b.x-a.x);
+    const perp = angle + Math.PI/2;
+    const w = 5;
+
+    ctx.shadowColor = '#4CAF50';
+    ctx.shadowBlur = 8;
+
+    // Left rail
+    ctx.beginPath();
+    ctx.moveTo(a.x + Math.cos(perp)*w, a.y + Math.sin(perp)*w);
+    ctx.lineTo(b.x + Math.cos(perp)*w, b.y + Math.sin(perp)*w);
+    ctx.strokeStyle = '#66BB6A';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Right rail
+    ctx.beginPath();
+    ctx.moveTo(a.x - Math.cos(perp)*w, a.y - Math.sin(perp)*w);
+    ctx.lineTo(b.x - Math.cos(perp)*w, b.y - Math.sin(perp)*w);
+    ctx.stroke();
+
+    // Rungs
+    const dist = Math.hypot(b.x-a.x, b.y-a.y);
+    const steps = Math.max(3, Math.floor(dist/20));
+    ctx.strokeStyle = '#A5D6A7';
+    ctx.lineWidth = 2;
+    for(let i=1;i<steps;i++){
+      const t = i/steps;
+      const mx = a.x+(b.x-a.x)*t, my = a.y+(b.y-a.y)*t;
+      ctx.beginPath();
+      ctx.moveTo(mx+Math.cos(perp)*w, my+Math.sin(perp)*w);
+      ctx.lineTo(mx-Math.cos(perp)*w, my-Math.sin(perp)*w);
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+
+    // Endpoint dots
+    [a,b].forEach(pt=>{
+      ctx.beginPath(); ctx.arc(pt.x,pt.y,5,0,Math.PI*2);
+      ctx.fillStyle='#FFD700'; ctx.shadowColor='#FFD700'; ctx.shadowBlur=8; ctx.fill();
+    });
+    ctx.shadowBlur=0;
+  }
+}
+
+function drawSnakes(){
+  for(const [from, to] of Object.entries(SNAKES)){
+    const a = cellCenter(+from);
+    const b = cellCenter(+to);
+
+    // snake body as thick bezier
+    const cp1x = a.x + (b.x-a.x)*.3 + 30;
+    const cp1y = a.y + (b.y-a.y)*.3 - 20;
+    const cp2x = b.x - (b.x-a.x)*.3 - 30;
+    const cp2y = b.y - (b.y-a.y)*.3 + 20;
+
+    // shadow
+    ctx.shadowColor='#FF1744'; ctx.shadowBlur=12;
+    ctx.beginPath();
+    ctx.moveTo(a.x,a.y);
+    ctx.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,b.x,b.y);
+    ctx.strokeStyle='#FF1744';
+    ctx.lineWidth=7;
+    ctx.lineCap='round';
+    ctx.stroke();
+
+    // body pattern
+    ctx.beginPath();
+    ctx.moveTo(a.x,a.y);
+    ctx.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,b.x,b.y);
+    ctx.strokeStyle='#FF6D00';
+    ctx.lineWidth=4;
+    ctx.setLineDash([8,6]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.shadowBlur=0;
+
+    // Head dot
+    ctx.beginPath(); ctx.arc(a.x,a.y,7,0,Math.PI*2);
+    ctx.fillStyle='#FF1744'; ctx.shadowColor='#FF1744'; ctx.shadowBlur=10; ctx.fill();
+    // Eyes
+    const ex = a.x+4, ey = a.y-4;
+    ctx.beginPath(); ctx.arc(ex,ey,2.5,0,Math.PI*2);
+    ctx.fillStyle='#fff'; ctx.shadowBlur=0; ctx.fill();
+    ctx.beginPath(); ctx.arc(ex,ey,1.2,0,Math.PI*2);
+    ctx.fillStyle='#000'; ctx.fill();
+
+    // Tail dot
+    ctx.beginPath(); ctx.arc(b.x,b.y,4,0,Math.PI*2);
+    ctx.fillStyle='#FF6D00'; ctx.shadowColor='#FF6D00'; ctx.shadowBlur=6; ctx.fill();
+    ctx.shadowBlur=0;
+  }
+}
+
+function draw100Star(){
+  const {x,y} = cellXY(100);
+  ctx.font = `${CELL*.7}px serif`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.shadowColor='#FFD700'; ctx.shadowBlur=20;
+  ctx.fillText('⭐', x+CELL/2, y+CELL/2);
+  ctx.shadowBlur=0;
+}
+
+function drawTokens(){
+  const grouped = {};
+  players.forEach((p,i)=>{
+    if(positions[i]===0) return;
+    const n = positions[i];
+    if(!grouped[n]) grouped[n]=[];
+    grouped[n].push(i);
+  });
+  for(const [n, pls] of Object.entries(grouped)){
+    const {x,y} = cellCenter(+n);
+    const total = pls.length;
+    pls.forEach((pi,idx)=>{
+      const angle = (idx/total)*Math.PI*2 - Math.PI/2;
+      const r = total>1 ? 10 : 0;
+      const tx = x + Math.cos(angle)*r;
+      const ty = y + Math.sin(angle)*r;
+
+      // glow
+      ctx.shadowColor = PLAYER_COLORS[pi];
+      ctx.shadowBlur = 12;
+
+      // token circle
+      ctx.beginPath(); ctx.arc(tx,ty,13,0,Math.PI*2);
+      const tg = ctx.createRadialGradient(tx-3,ty-3,2,tx,ty,13);
+      tg.addColorStop(0,'#fff');
+      tg.addColorStop(.3,PLAYER_COLORS[pi]);
+      tg.addColorStop(1, PLAYER_COLORS[pi]+'88');
+      ctx.fillStyle=tg; ctx.fill();
+
+      // border
+      ctx.strokeStyle='rgba(255,255,255,.8)';
+      ctx.lineWidth=2; ctx.stroke();
+      ctx.shadowBlur=0;
+
+      // initial
+      ctx.font='bold 11px Nunito,sans-serif';
+      ctx.fillStyle='#fff';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(players[pi].name[0].toUpperCase(), tx, ty);
+    });
+  }
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+}
+
+function redraw(){ drawBoard(); drawTokens(); }
+
+// =============================================
+// SCORE LIST
+// =============================================
+function updateScoreList(){
+  const list = document.getElementById('scoreList');
+  list.innerHTML = '';
+  // Sort by posisi tertinggi
+  const sorted = players.map((p,i)=>({p,i})).sort((a,b)=>positions[b.i]-positions[a.i]);
+  sorted.forEach(({p,i}, rank)=>{
+    const pct = (positions[i]/100)*100;
+    const isFinished = finished.indexOf(i)!==-1;
+    const div = document.createElement('div');
+    div.className='score-row';
+    div.innerHTML=`<div class="score-dot" style="background:${PLAYER_COLORS[i]}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="score-name">${p.name}${isFinished?' 🏁':''}</div>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:${pct}%;background:${PLAYER_COLORS[i]}"></div></div>
+      </div>
+      <div class="score-pos">${positions[i]>0?positions[i]:'-'}</div>`;
+    list.appendChild(div);
+  });
+}
+
+// =============================================
+// GAME
+// =============================================
+function startGame(){
+  try{ac();}catch(e){}
+  const inputs = document.querySelectorAll('#playerInputs input');
+  players = [];
+  for(let i=0;i<playerCount;i++){
+    players.push({name: inputs[i]?.value.trim() || `Pemain ${i+1}`, color: PLAYER_COLORS[i]});
+  }
+  positions = new Array(playerCount).fill(0);
+  finished = [];
+  turn = 0;
+  gameActive = true;
+  document.getElementById('rollBtn').disabled = false;
+  updateTurnUI();
+  updateScoreList();
+  redraw();
+}
+
+function resetGame(){
+  gameActive = false;
+  players = []; positions = []; finished = []; turn = 0;
+  document.getElementById('rollBtn').disabled = true;
+  document.getElementById('turnName').textContent = '—';
+  document.getElementById('diceResult').textContent = '—';
+  document.getElementById('dice').textContent = '🎲';
+  document.getElementById('scoreList').innerHTML = '';
+  buildInputs();
+  redraw();
+}
+
+function updateTurnUI(){
+  if(!gameActive||!players[turn]) return;
+  document.getElementById('turnName').textContent = players[turn].name;
+  document.getElementById('turnName').style.color = PLAYER_COLORS[turn];
+}
+
+function rollDice(){
+  if(!gameActive||rolling) return;
+  rolling = true;
+  document.getElementById('rollBtn').disabled = true;
+  sndDice();
+
+  // Animate dice
+  let frames = 0;
+  const anim = setInterval(()=>{
+    const f = Math.floor(Math.random()*6);
+    document.getElementById('dice').textContent = DICE_FACES[f];
+    frames++;
+    if(frames>10){ clearInterval(anim); doMove(); }
+  }, 60);
+}
+
+function doMove(){
+  const d = Math.floor(Math.random()*6)+1;
+  document.getElementById('dice').textContent = DICE_FACES[d-1];
+  document.getElementById('diceResult').textContent = `Angka: ${d}`;
+
+  let landPos = positions[turn] + d; // kotak yang diinjak dadu
+  let finalPos = landPos;            // kotak akhir setelah tangga/ular
+  let eventType = null;
+
+  if(landPos > 100){
+    showEvent('bounce', ()=>nextTurn());
+    rolling=false;
+    return;
+  } else {
+    if(LADDERS[landPos]){ eventType='ladder'; finalPos=LADDERS[landPos]; }
+    else if(SNAKES[landPos]){ eventType='snake'; finalPos=SNAKES[landPos]; }
+  }
+
+  // Langkah 1: animasi step-by-step hanya sampai kotak yang diinjak dadu
+  animateMove(positions[turn], landPos, ()=>{
+    positions[turn] = landPos;
+    updateScoreList();
+    redraw();
+
+    if(eventType){
+      // Langkah 2: tunjukkan popup, lalu langsung lompat ke tujuan tangga/ular
+      setTimeout(()=>{
+        showEvent(eventType, ()=>{
+          positions[turn] = finalPos;
+          redraw();
+          updateScoreList();
+
+          if(finalPos===100){
+            finished.push(turn);
+            const remaining = players.filter((_,i)=>finished.indexOf(i)===-1);
+            if(remaining.length<=1){
+              players.forEach((_,i)=>{ if(finished.indexOf(i)===-1) finished.push(i); });
+              document.getElementById('rollBtn').disabled = true;
+              setTimeout(showPodium, 600);
+              rolling=false;
+              return;
+            }
+          }
+          nextTurn();
+        });
+      }, 300);
+    } else {
+      // Tidak ada tangga/ular
+      if(landPos===100){
+        finished.push(turn);
+        const remaining = players.filter((_,i)=>finished.indexOf(i)===-1);
+        if(remaining.length<=1){
+          players.forEach((_,i)=>{ if(finished.indexOf(i)===-1) finished.push(i); });
+          document.getElementById('rollBtn').disabled = true;
+          setTimeout(showPodium, 600);
+          rolling=false;
+          return;
+        }
+      }
+      setTimeout(nextTurn, 400);
+    }
+  });
+}
+
+function animateMove(from, to, cb){
+  const steps = Math.abs(to-from);
+  if(steps===0){ cb(); return; }
+  let cur = from;
+  let i=0;
+  const dir = to>from ? 1 : -1;
+  const delay = steps>10 ? 60 : steps>5 ? 90 : 120;
+  function step(){
+    cur += dir;
+    i++;
+    positions[turn]=cur;
+    sndMove();
+    redraw();
+    if(i<steps) setTimeout(step, delay);
+    else setTimeout(cb, 200);
+  }
+  setTimeout(step, 80);
+}
+
+function nextTurn(){
+  rolling=false;
+  // Skip finished players
+  let next = (turn+1) % players.length;
+  let tries = 0;
+  while(finished.indexOf(next)!==-1 && tries<players.length){
+    next=(next+1)%players.length; tries++;
+  }
+  turn=next;
+  updateTurnUI();
+  document.getElementById('rollBtn').disabled=false;
+}
+
+function showEvent(type, cb){
+  const overlay = document.getElementById('eventOverlay');
+  if(type==='ladder'){
+    document.getElementById('eventIcon').textContent='🪜';
+    document.getElementById('eventTitle').textContent='Naik Tangga!';
+    document.getElementById('eventTitle').style.color='#69F0AE';
+    document.getElementById('eventDesc').textContent='Yeay! Kamu maju ke depan!';
+    sndLadder();
+  } else if(type==='snake'){
+    document.getElementById('eventIcon').textContent='🐍';
+    document.getElementById('eventTitle').textContent='Kena Ular!';
+    document.getElementById('eventTitle').style.color='#FF5252';
+    document.getElementById('eventDesc').textContent='Aduh! Kamu turun ke belakang!';
+    sndSnake();
+  } else {
+    // bounce — terlalu jauh dari 100
+    document.getElementById('eventIcon').textContent='↩️';
+    document.getElementById('eventTitle').textContent='Terlalu Jauh!';
+    document.getElementById('eventTitle').style.color='#FFD700';
+    document.getElementById('eventDesc').textContent='Butuh angka pas untuk sampai ke 100!';
+    sndDice();
+  }
+  overlay.classList.add('show');
+  setTimeout(()=>{ overlay.classList.remove('show'); cb(); },1400);
+}
+
+// =============================================
+// PODIUM
+// =============================================
+function showPodium(){
+  sndWin(); launchConf();
+  gameActive=false;
+
+  const podiumEl = document.getElementById('podium');
+  const otherEl = document.getElementById('otherRanks');
+  podiumEl.innerHTML=''; otherEl.innerHTML='';
+
+  // finished array = order of completion
+  const ranked = finished; // index order = rank
+
+  // Podium: positions 2,1,3 (visual layout: silver left, gold center, bronze right)
+  const top3 = [ranked[1], ranked[0], ranked[2]].filter(x=>x!==undefined);
+  const podiumClass = ['p2','p1','p3'];
+  const medals = ['🥈','🥇','🥉'];
+  const rankNums = [2,1,3];
+
+  // Visual order: 2nd, 1st, 3rd
+  const visualOrder = [];
+  if(ranked[1]!==undefined) visualOrder.push({pi:ranked[1],rank:2,medal:'🥈',cls:'p2'});
+  if(ranked[0]!==undefined) visualOrder.push({pi:ranked[0],rank:1,medal:'🥇',cls:'p1'});
+  if(ranked[2]!==undefined) visualOrder.push({pi:ranked[2],rank:3,medal:'🥉',cls:'p3'});
+
+  visualOrder.forEach(({pi,rank,medal,cls})=>{
+    const p=players[pi];
+    const slot=document.createElement('div');
+    slot.className=`podium-slot ${cls}`;
+    slot.innerHTML=`
+      <div class="podium-avatar" style="border-color:${p.color};background:${p.color}22">
+        <span style="-webkit-text-fill-color:initial;filter:none;">${p.name[0].toUpperCase()}</span>
+      </div>
+      <div class="podium-pname">${p.name}</div>
+      <div class="podium-block">${medal}</div>`;
+    podiumEl.appendChild(slot);
+  });
+
+  // Others (rank 4, 5)
+  for(let r=3;r<ranked.length;r++){
+    const pi=ranked[r];
+    const p=players[pi];
+    const row=document.createElement('div');
+    row.className='other-row';
+    row.innerHTML=`<div class="other-rank-num">#${r+1}</div>
+      <div class="other-dot" style="background:${p.color}"></div>
+      <div class="other-name">${p.name}</div>
+      <div class="other-pos">Kotak ${positions[pi]}</div>`;
+    otherEl.appendChild(row);
+  }
+
+  document.getElementById('winOverlay').classList.add('show');
+}
+
+function playAgain(){
+  document.getElementById('winOverlay').classList.remove('show');
+  positions = new Array(playerCount).fill(0);
+  finished=[]; turn=0; gameActive=true; rolling=false;
+  updateTurnUI(); updateScoreList(); redraw();
+  document.getElementById('rollBtn').disabled=false;
+  document.getElementById('dice').textContent='🎲';
+  document.getElementById('diceResult').textContent='—';
+}
+
+// =============================================
+// CONFETTI
+// =============================================
+const ccv=document.getElementById('confCv');
+const cctx=ccv.getContext('2d');
+let cp=[],cr=null;
+function launchConf(){
+  ccv.width=window.innerWidth;ccv.height=window.innerHeight;cp=[];
+  const cols=['#FFD700','#FF3CAC','#00FFFF','#69F0AE','#FF6B35','#fff'];
+  for(let i=0;i<150;i++) cp.push({x:Math.random()*ccv.width,y:-20,vx:(Math.random()-.5)*6,vy:2+Math.random()*5,r:3+Math.random()*7,col:cols[i%cols.length],rot:Math.random()*360,rv:(Math.random()-.5)*10});
+  cancelAnimationFrame(cr);animC();
+  setTimeout(()=>{cancelAnimationFrame(cr);cctx.clearRect(0,0,ccv.width,ccv.height);},5000);
+}
+function animC(){
+  cctx.clearRect(0,0,ccv.width,ccv.height);
+  cp.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.rot+=p.rv;cctx.save();cctx.translate(p.x,p.y);cctx.rotate(p.rot*Math.PI/180);cctx.fillStyle=p.col;cctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);cctx.restore();});
+  cp=cp.filter(p=>p.y<ccv.height+30);
+  if(cp.length>0) cr=requestAnimationFrame(animC);
+}
+
+// =============================================
+// INIT
+// =============================================
+buildInputs();
+drawBoard();
+
+window.addEventListener('touchstart',()=>{try{ac();}catch(e){}},{once:false,passive:true});
+</script>
+</body>
+</html>

@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🔤 Tebak Kata Hewan</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF6E9;
+  --pink:#FF6B9D;
+  --yellow:#FFD93D;
+  --green:#6BCB77;
+  --purple:#C77DFF;
+  --orange:#FF9A3C;
+  --blue:#4ECDC4;
+  --red:#FF6B6B;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+
+#app{width:100vw;max-width:420px;height:100vh;display:flex;flex-direction:column;align-items:center;padding:10px 12px;position:relative;overflow:hidden;}
+
+/* floating stars bg */
+.fstar{position:absolute;pointer-events:none;font-size:1.2rem;opacity:.15;animation:twinkle 3s ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:.1;transform:scale(1)}50%{opacity:.25;transform:scale(1.2)}}
+
+/* HEADER */
+.hdr{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;z-index:2;}
+.game-ttl{font-family:'Fredoka One',cursive;font-size:1.5rem;color:var(--pink);text-shadow:2px 2px 0 var(--yellow);}
+.score-pill{background:#fff;border-radius:50px;padding:5px 14px;font-size:.85rem;font-weight:900;color:#555;box-shadow:0 3px 10px rgba(0,0,0,0.1);display:flex;align-items:center;gap:4px;}
+
+/* SCREENS */
+.screen{width:100%;display:none;flex-direction:column;align-items:center;flex:1;z-index:2;}
+.screen.active{display:flex;}
+
+/* ===== MENU ===== */
+#menuScreen{justify-content:center;gap:10px;text-align:center;}
+.menu-animals{font-size:3rem;letter-spacing:8px;animation:wobble 2s ease-in-out infinite;margin:6px 0;}
+@keyframes wobble{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.menu-title{font-family:'Fredoka One',cursive;font-size:2.2rem;color:#333;line-height:1.1;}
+.menu-sub{font-size:.9rem;color:#aaa;font-weight:800;margin-bottom:8px;}
+.diff-wrap{display:flex;gap:10px;}
+.diff-card{cursor:pointer;padding:12px 18px;border-radius:20px;border:3px solid transparent;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,0.1);text-align:center;transition:all .2s;flex:1;}
+.diff-card:hover,.diff-card.sel{transform:translateY(-3px) rotate(-2deg);border-color:var(--pink);box-shadow:0 8px 20px rgba(255,107,157,0.3);}
+.diff-card .dico{font-size:1.8rem;display:block;}
+.diff-card .dnm{font-family:'Fredoka One',cursive;font-size:.95rem;color:#555;display:block;}
+.diff-card .ddesc{font-size:.6rem;color:#aaa;display:block;margin-top:2px;}
+.btn-start{font-family:'Fredoka One',cursive;font-size:1.3rem;background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;border:none;border-radius:50px;padding:14px 50px;cursor:pointer;box-shadow:0 6px 0 #9b3db8;transition:all .15s;margin-top:6px;}
+.btn-start:active{transform:translateY(4px);box-shadow:0 2px 0 #9b3db8;}
+.hi-score{font-size:.7rem;color:#aaa;font-weight:800;letter-spacing:1px;margin-top:4px;}
+.hi-score span{color:var(--yellow);}
+
+/* ===== GAME ===== */
+#gameScreen{gap:6px;justify-content:flex-start;padding-top:4px;}
+
+/* progress bar */
+.prog-wrap{width:100%;background:#fff;border-radius:50px;height:12px;box-shadow:inset 0 2px 4px rgba(0,0,0,0.08);overflow:hidden;}
+.prog-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--green),var(--blue));transition:width .4s ease;}
+
+/* lives */
+.lives-row{display:flex;gap:4px;align-items:center;}
+.life{font-size:1.3rem;transition:all .2s;}
+.life.lost{filter:grayscale(1);opacity:.3;transform:scale(.8);}
+
+/* timer ring */
+.timer-wrap{position:relative;width:52px;height:52px;}
+.timer-svg{transform:rotate(-90deg);}
+.timer-bg{fill:none;stroke:#eee;stroke-width:4;}
+.timer-ring{fill:none;stroke:var(--green);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .9s linear,stroke .3s;}
+.timer-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Fredoka One',cursive;font-size:1.1rem;color:#555;}
+
+/* animal display */
+.animal-card{
+  background:#fff;border-radius:24px;padding:12px 16px;
+  box-shadow:0 8px 28px rgba(0,0,0,0.1);
+  border:4px solid var(--yellow);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  width:100%;
+  animation:cardIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes cardIn{from{transform:scale(.7) rotate(-5deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.animal-emoji{font-size:5.5rem;line-height:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.15));animation:animalFloat 2.5s ease-in-out infinite;}
+@keyframes animalFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.hint-text{font-size:.75rem;color:#aaa;font-weight:800;letter-spacing:1px;background:#f8f8f8;padding:4px 12px;border-radius:50px;}
+
+/* word blanks */
+.blanks-wrap{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:2px 0;}
+.blank{
+  width:38px;height:44px;
+  background:#fff;border-radius:10px;
+  border:3px solid #ddd;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fredoka One',cursive;font-size:1.4rem;color:#333;
+  box-shadow:0 3px 8px rgba(0,0,0,0.08);
+  transition:all .2s;
+}
+.blank.filled{border-color:var(--blue);background:#E8FFFE;color:var(--blue);}
+.blank.correct-anim{animation:blinkGreen .4s ease;}
+@keyframes blinkGreen{0%,100%{background:#E8FFFE}50%{background:#b2f5e0}}
+.blank.wrong-flash{animation:blinkRed .4s ease;}
+@keyframes blinkRed{0%,100%{background:#FFE8E8}50%{background:#ffb3b3}}
+.blank.space-blank{background:transparent;border:none;box-shadow:none;width:16px;}
+
+/* letter buttons */
+.letters-grid{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;width:100%;}
+.letter-btn{
+  width:42px;height:42px;
+  font-family:'Fredoka One',cursive;font-size:1.1rem;
+  border:none;border-radius:12px;cursor:pointer;
+  transition:all .12s;
+  box-shadow:0 4px 0 rgba(0,0,0,0.18);
+  position:relative;
+}
+.letter-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,0.18);}
+.letter-btn.used{opacity:.25;pointer-events:none;transform:scale(.9);}
+.letter-btn.wrong-shake{animation:lShake .3s ease;}
+@keyframes lShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* action btns */
+.action-row{display:flex;gap:8px;width:100%;}
+.btn-hapus{font-family:'Fredoka One',cursive;font-size:.9rem;background:#fff;color:var(--red);border:3px solid var(--red);border-radius:50px;padding:8px 18px;cursor:pointer;flex:1;transition:all .15s;}
+.btn-hapus:active{transform:scale(.95);}
+.btn-skip{font-family:'Fredoka One',cursive;font-size:.9rem;background:#fff;color:#aaa;border:3px solid #ddd;border-radius:50px;padding:8px 18px;cursor:pointer;flex:1;transition:all .15s;}
+.btn-skip:active{transform:scale(.95);}
+
+/* feedback overlay */
+#feedback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:50;pointer-events:none;opacity:0;transition:opacity .2s;}
+#feedback.show{opacity:1;}
+.fb-box{background:#fff;border-radius:24px;padding:20px 36px;text-align:center;box-shadow:0 16px 40px rgba(0,0,0,0.15);animation:fbPop .35s cubic-bezier(.34,1.56,.64,1);}
+@keyframes fbPop{from{transform:scale(.5)}to{transform:scale(1)}}
+.fb-ico{font-size:3.5rem;display:block;}
+.fb-msg{font-family:'Fredoka One',cursive;font-size:1.6rem;}
+
+/* ===== RESULT ===== */
+#resultScreen{justify-content:center;gap:8px;text-align:center;}
+.res-emoji{font-size:5rem;animation:resBounce .6s cubic-bezier(.34,1.56,.64,1);}
+@keyframes resBounce{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(5deg)}}
+.res-title{font-family:'Fredoka One',cursive;font-size:2.2rem;}
+.res-score{font-family:'Fredoka One',cursive;font-size:3.5rem;color:var(--yellow);text-shadow:3px 3px 0 var(--orange);}
+.res-detail{font-size:.9rem;color:#aaa;font-weight:800;}
+.res-stars{font-size:2.2rem;letter-spacing:4px;animation:starsPop .5s .2s both;}
+@keyframes starsPop{from{transform:scale(0)}to{transform:scale(1)}}
+.res-btns{display:flex;gap:10px;margin-top:8px;}
+.btn-lagi{font-family:'Fredoka One',cursive;font-size:1.1rem;background:linear-gradient(135deg,var(--green),var(--blue));color:#fff;border:none;border-radius:50px;padding:12px 28px;cursor:pointer;box-shadow:0 5px 0 #2a8a82;}
+.btn-menu-r{font-family:'Fredoka One',cursive;font-size:1.1rem;background:#fff;color:var(--pink);border:3px solid var(--pink);border-radius:50px;padding:10px 22px;cursor:pointer;}
+
+/* confetti */
+#confCv{position:fixed;inset:0;pointer-events:none;z-index:200;}
+/* floating letter particles */
+.fly-letter{position:fixed;font-family:'Fredoka One',cursive;font-size:1.6rem;pointer-events:none;z-index:150;animation:flyUp .7s ease forwards;}
+@keyframes flyUp{0%{transform:scale(.5) translateY(0);opacity:1}100%{transform:scale(1.4) translateY(-90px);opacity:0}}
+</style>
+</head>
+<body>
+<canvas id="confCv"></canvas>
+<div id="app">
+  <!-- bg stars -->
+  <div id="bgStars"></div>
+
+  <div class="hdr">
+    <div class="game-ttl">🔤 Tebak!</div>
+    <div class="score-pill">⭐ <span id="scoreDisp">0</span></div>
+  </div>
+
+  <!-- MENU -->
+  <div class="screen active" id="menuScreen">
+    <div class="menu-animals">🐱🐶🐘🦁🐸</div>
+    <div class="menu-title">Tebak Kata<br>Hewan Lucu!</div>
+    <div class="menu-sub">Ketik nama hewannya! 🎉</div>
+    <div class="diff-wrap">
+      <div class="diff-card sel" onclick="pickDiff('easy',this)">
+        <span class="dico">😊</span>
+        <span class="dnm">Mudah</span>
+        <span class="ddesc">3-4 huruf</span>
+      </div>
+      <div class="diff-card" onclick="pickDiff('med',this)">
+        <span class="dico">😤</span>
+        <span class="dnm">Sedang</span>
+        <span class="ddesc">5-6 huruf</span>
+      </div>
+      <div class="diff-card" onclick="pickDiff('hard',this)">
+        <span class="dico">😈</span>
+        <span class="dnm">Susah</span>
+        <span class="ddesc">7+ huruf</span>
+      </div>
+    </div>
+    <button class="btn-start" onclick="startGame()">▶ MAIN!</button>
+    <div class="hi-score">SKOR TERBAIK: <span id="hiScoreDisp">0</span></div>
+  </div>
+
+  <!-- GAME -->
+  <div class="screen" id="gameScreen">
+    <div style="width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="lives-row" id="livesRow"></div>
+      <div class="timer-wrap">
+        <svg class="timer-svg" width="52" height="52" viewBox="0 0 52 52">
+          <circle class="timer-bg" cx="26" cy="26" r="22"/>
+          <circle class="timer-ring" id="timerRing" cx="26" cy="26" r="22" stroke-dasharray="138" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-num" id="timerNum">20</div>
+      </div>
+      <div style="font-size:.75rem;color:#aaa;font-weight:800;">soal <span id="qNum">1</span>/<span id="qTotal">10</span></div>
+    </div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+
+    <div class="animal-card" id="animalCard">
+      <div class="animal-emoji" id="animalEmoji">🐱</div>
+      <div class="hint-text" id="hintText">Petunjuk: hewan peliharaan</div>
+    </div>
+
+    <div class="blanks-wrap" id="blanksWrap"></div>
+    <div class="letters-grid" id="lettersGrid"></div>
+
+    <div class="action-row">
+      <button class="btn-hapus" onclick="hapusHuruf()">⌫ Hapus</button>
+      <button class="btn-skip" onclick="skipSoal()">⏭ Lewati</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="resultScreen">
+    <div class="res-emoji" id="resEmoji">🎉</div>
+    <div class="res-title" id="resTitle">Keren!</div>
+    <div class="res-score" id="resScore">0</div>
+    <div class="res-detail" id="resDetail">poin</div>
+    <div class="res-stars" id="resStars">⭐⭐⭐</div>
+    <div class="res-btns">
+      <button class="btn-lagi" onclick="startGame()">🔄 Main Lagi!</button>
+      <button class="btn-menu-r" onclick="showMenu()">🏠 Menu</button>
+    </div>
+  </div>
+
+  <div id="feedback">
+    <div class="fb-box">
+      <span class="fb-ico" id="fbIco">✅</span>
+      <div class="fb-msg" id="fbMsg">Benar!</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// ANIMAL DATA
+// =============================================
+const ALL_ANIMALS = [
+  // MUDAH (3-5 huruf)
+  {word:'SAPI',    emoji:'🐄', hint:'Suka makan rumput, bikin susu',       diff:'easy'},
+  {word:'IKAN',    emoji:'🐟', hint:'Hidup di air, punya sirip',            diff:'easy'},
+  {word:'TIKUS',   emoji:'🐭', hint:'Hewan kecil yang suka keju',           diff:'easy'},
+  {word:'BABI',    emoji:'🐷', hint:'Hidungnya pesek dan lucu',             diff:'easy'},
+  {word:'AYAM',    emoji:'🐔', hint:'Berkokok di pagi hari',                diff:'easy'},
+  {word:'KUDA',    emoji:'🐴', hint:'Bisa dinaiki, berlari kencang',        diff:'easy'},
+  {word:'BEBEK',   emoji:'🦆', hint:'Kwek kwek, suka bermain air',          diff:'easy'},
+  {word:'KATAK',   emoji:'🐸', hint:'Suka loncat, tinggal di kolam',        diff:'easy'},
+  {word:'GAJAH',   emoji:'🐘', hint:'Hewan terbesar di darat, belalainya panjang', diff:'easy'},
+  {word:'RUSA',    emoji:'🦌', hint:'Hewan hutan bertanduk indah',          diff:'easy'},
+  // SEDANG (6-7 huruf)
+  {word:'KUCING',  emoji:'🐱', hint:'Hewan peliharaan, suaranya meong',     diff:'med'},
+  {word:'ANJING',  emoji:'🐶', hint:'Hewan peliharaan setia',               diff:'med'},
+  {word:'HARIMAU', emoji:'🐯', hint:'Kucing besar bergaris hitam',          diff:'med'},
+  {word:'KELINCI', emoji:'🐰', hint:'Telinganya panjang, suka wortel',      diff:'med'},
+  {word:'BERUANG', emoji:'🐻', hint:'Tidur panjang di musim dingin',        diff:'med'},
+  {word:'JERAPAH', emoji:'🦒', hint:'Lehernya sangat panjang',              diff:'med'},
+  {word:'MONYET',  emoji:'🐒', hint:'Suka berayun di pohon',                diff:'med'},
+  {word:'KERBAU',  emoji:'🐃', hint:'Suka berendam di lumpur',              diff:'med'},
+  {word:'SINGA',   emoji:'🦁', hint:'Raja hutan yang gagah',                diff:'med'},
+  {word:'ZEBRA',   emoji:'🦓', hint:'Kuda belang hitam putih',              diff:'med'},
+  // SUSAH (8+ huruf)
+  {word:'ORANGUTAN', emoji:'🦧', hint:'Kera besar dari Kalimantan',         diff:'hard'},
+  {word:'KANGURU',   emoji:'🦘', hint:'Hewan Australia punya kantong',      diff:'hard'},
+  {word:'FLAMINGO',  emoji:'🦩', hint:'Burung merah muda berkaki panjang',  diff:'hard'},
+  {word:'PINGUIN',   emoji:'🐧', hint:'Burung yang tidak bisa terbang',     diff:'hard'},
+  {word:'CHEETAH',   emoji:'🐆', hint:'Hewan tercepat di dunia',            diff:'hard'},
+  {word:'GORILA',    emoji:'🦍', hint:'Kera terbesar dan terkuat',          diff:'hard'},
+  {word:'GURITA',    emoji:'🐙', hint:'Punya 8 tentakel di laut',           diff:'hard'},
+  {word:'BUAYA',     emoji:'🐊', hint:'Reptil besar bergigi tajam',         diff:'hard'},
+];
+
+// Letter colors
+const LETTER_COLORS = [
+  {bg:'#FF6B9D',shadow:'#c4005e'},
+  {bg:'#FF9A3C',shadow:'#c45f00'},
+  {bg:'#FFD93D',shadow:'#c4a000'},
+  {bg:'#6BCB77',shadow:'#2a8a40'},
+  {bg:'#4ECDC4',shadow:'#1a8a82'},
+  {bg:'#C77DFF',shadow:'#7a00cc'},
+  {bg:'#74C0FC',shadow:'#1a7acc'},
+  {bg:'#FF6B6B',shadow:'#cc0000'},
+];
+
+// =============================================
+// SOUND
+// =============================================
+let _ac=null;
+function getAC(){
+  if(!_ac) _ac=new(window.AudioContext||window.webkitAudioContext)();
+  if(_ac.state==='suspended') _ac.resume();
+  return _ac;
+}
+function beep(f,d,t,v,dl){
+  try{
+    const a=getAC(),o=a.createOscillator(),g=a.createGain();
+    o.connect(g);g.connect(a.destination);
+    o.type=t||'sine';
+    o.frequency.setValueAtTime(f,a.currentTime+(dl||0));
+    g.gain.setValueAtTime(v||.3,a.currentTime+(dl||0));
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+(dl||0)+d);
+    o.start(a.currentTime+(dl||0));
+    o.stop(a.currentTime+(dl||0)+d+.05);
+  }catch(e){}
+}
+function sndTap(){beep(800,.05,'square',.12);}
+function sndCorrect(){
+  beep(523,.1,'triangle',.3,0);
+  beep(659,.1,'triangle',.3,.1);
+  beep(784,.15,'triangle',.35,.2);
+  beep(1047,.25,'triangle',.3,.32);
+}
+function sndWrong(){beep(200,.18,'sawtooth',.25,0);beep(160,.18,'sawtooth',.2,.1);}
+function sndWin(){
+  [523,659,784,1047,1319,1568].forEach((f,i)=>beep(f,.35,'triangle',.28,i*.07));
+  [2093,2637,3136].forEach((f,i)=>beep(f,.2,'sine',.15,.5+i*.06));
+}
+function sndTick(){beep(600,.04,'square',.08);}
+function sndTimeOut(){beep(300,.3,'sawtooth',.25,0);beep(220,.3,'sawtooth',.2,.15);}
+
+// =============================================
+// GAME STATE
+// =============================================
+let difficulty='easy', hiScore=0;
+let questions=[], qIdx=0, totalQ=10;
+let currentWord='', currentAnswer=[], lives=3, score=0;
+let timerVal=20, timerInterval=null;
+let answered=false;
+
+function pickDiff(d,el){
+  difficulty=d;
+  document.querySelectorAll('.diff-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  sndTap();
+}
+
+// =============================================
+// BUILD BG STARS
+// =============================================
+(function(){
+  const bg=document.getElementById('bgStars');
+  const emojis=['⭐','✨','🌟','💫'];
+  for(let i=0;i<12;i++){
+    const s=document.createElement('div');
+    s.className='fstar';
+    s.textContent=emojis[i%4];
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${-Math.random()*3}s;animation-duration:${2+Math.random()*2}s;`;
+    bg.appendChild(s);
+  }
+})();
+
+// =============================================
+// START GAME
+// =============================================
+function startGame(){
+  // Pick questions for this difficulty
+  const pool = ALL_ANIMALS.filter(a=>{
+    if(difficulty==='easy') return a.diff==='easy';
+    if(difficulty==='med') return a.diff==='med';
+    return a.diff==='hard';
+  });
+  // Shuffle
+  const shuffled=[...pool].sort(()=>Math.random()-.5);
+  questions=shuffled.slice(0,Math.min(10,shuffled.length));
+  totalQ=questions.length;
+  qIdx=0; score=0; lives=3; answered=false;
+  document.getElementById('scoreDisp').textContent='0';
+  document.getElementById('qTotal').textContent=totalQ;
+  showScreen('gameScreen');
+  loadQuestion();
+}
+
+function loadQuestion(){
+  if(qIdx>=questions.length){ showResult(); return; }
+  answered=false;
+  clearInterval(timerInterval);
+  const q=questions[qIdx];
+  currentWord=q.word;
+  currentAnswer=new Array(currentWord.length).fill('');
+
+  // UI update
+  document.getElementById('animalEmoji').textContent=q.emoji;
+  document.getElementById('hintText').textContent='💡 '+q.hint;
+  document.getElementById('qNum').textContent=qIdx+1;
+  document.getElementById('progFill').style.width=((qIdx/totalQ)*100)+'%';
+
+  // Animate card
+  const card=document.getElementById('animalCard');
+  card.style.animation='none'; card.offsetHeight;
+  card.style.animation='cardIn .4s cubic-bezier(.34,1.56,.64,1)';
+
+  buildBlanks();
+  buildLetters(q.word);
+  buildLives();
+  startTimer();
+}
+
+function buildBlanks(){
+  const wrap=document.getElementById('blanksWrap');
+  wrap.innerHTML='';
+  for(let i=0;i<currentWord.length;i++){
+    const b=document.createElement('div');
+    b.className='blank';
+    b.id='blank'+i;
+    wrap.appendChild(b);
+  }
+}
+
+function buildLetters(word){
+  const grid=document.getElementById('lettersGrid');
+  grid.innerHTML='';
+  // Hitung frekuensi tiap huruf di kata (inkl. duplikat)
+  const freq={};
+  word.split('').forEach(l=>{freq[l]=(freq[l]||0)+1;});
+  const needed=[];
+  Object.entries(freq).forEach(([l,n])=>{for(let i=0;i<n;i++) needed.push(l);});
+  // Tambah 4-5 distractor huruf acak yang belum ada di kata
+  const uniqueInWord=new Set(word.split(''));
+  const alpha='ABCDEFGHIJKLMNOPRSTUVWYZ';
+  const distractors=[];
+  while(distractors.length<5){
+    const l=alpha[Math.floor(Math.random()*alpha.length)];
+    if(!uniqueInWord.has(l)&&!distractors.includes(l)) distractors.push(l);
+  }
+  const all=[...needed,...distractors].sort(()=>Math.random()-.5);
+  all.forEach((letter,i)=>{
+    const col=LETTER_COLORS[i%LETTER_COLORS.length];
+    const btn=document.createElement('button');
+    btn.className='letter-btn';
+    btn.textContent=letter;
+    btn.style.background=col.bg;
+    btn.style.color='#fff';
+    btn.style.boxShadow=`0 4px 0 ${col.shadow}`;
+    btn.dataset.letter=letter;
+    btn.onclick=()=>inputLetter(letter, btn);
+    grid.appendChild(btn);
+  });
+}
+
+function buildLives(){
+  const row=document.getElementById('livesRow');
+  row.innerHTML='';
+  for(let i=0;i<3;i++){
+    const h=document.createElement('div');
+    h.className='life'+(i>=lives?' lost':'');
+    h.textContent='❤️';
+    h.id='life'+i;
+    row.appendChild(h);
+  }
+}
+
+// =============================================
+// TIMER
+// =============================================
+function startTimer(){
+  timerVal = difficulty==='easy'?25:difficulty==='med'?20:15;
+  updateTimerUI();
+  timerInterval=setInterval(()=>{
+    timerVal--;
+    updateTimerUI();
+    if(timerVal<=5) sndTick();
+    if(timerVal<=0){
+      clearInterval(timerInterval);
+      sndTimeOut();
+      loseLife();
+    }
+  },1000);
+}
+
+function updateTimerUI(){
+  const max=difficulty==='easy'?25:difficulty==='med'?20:15;
+  const pct=timerVal/max;
+  const circ=138;
+  document.getElementById('timerRing').style.strokeDashoffset=(circ*(1-pct)).toFixed(1);
+  document.getElementById('timerRing').style.stroke=timerVal<=5?'#FF6B6B':timerVal<=10?'#FFD93D':'#6BCB77';
+  document.getElementById('timerNum').textContent=timerVal;
+}
+
+// =============================================
+// INPUT
+// =============================================
+function inputLetter(letter, btn){
+  if(answered) return;
+  sndTap();
+  // Find first empty blank
+  const emptyIdx=currentAnswer.findIndex(l=>l==='');
+  if(emptyIdx===-1) return;
+  currentAnswer[emptyIdx]=letter;
+  // Update blank
+  const blankEl=document.getElementById('blank'+emptyIdx);
+  blankEl.textContent=letter;
+  blankEl.classList.add('filled');
+  btn.classList.add('used');
+  // Fly letter particle
+  flyLetter(letter, btn);
+  // Check if all filled
+  if(currentAnswer.every(l=>l!=='')) checkAnswer();
+}
+
+function hapusHuruf(){
+  if(answered) return;
+  sndTap();
+  // Find last filled blank
+  let lastIdx=-1;
+  for(let i=currentAnswer.length-1;i>=0;i--){
+    if(currentAnswer[i]!==''){lastIdx=i;break;}
+  }
+  if(lastIdx===-1) return;
+  const letter=currentAnswer[lastIdx];
+  currentAnswer[lastIdx]='';
+  const blankEl=document.getElementById('blank'+lastIdx);
+  blankEl.textContent='';
+  blankEl.classList.remove('filled');
+  // Re-enable hanya SATU tombol dengan huruf tersebut (yg pertama ditemukan dalam status 'used')
+  let reEnabled=false;
+  document.querySelectorAll('.letter-btn').forEach(b=>{
+    if(!reEnabled && b.dataset.letter===letter && b.classList.contains('used')){
+      b.classList.remove('used');
+      reEnabled=true;
+    }
+  });
+}
+
+function checkAnswer(){
+  if(answered) return;
+  answered=true;
+  clearInterval(timerInterval);
+  const attempt=currentAnswer.join('');
+  if(attempt===currentWord){
+    // CORRECT!
+    sndCorrect();
+    const timeBonus=timerVal*2;
+    const pts=100+timeBonus;
+    score+=pts;
+    document.getElementById('scoreDisp').textContent=score;
+    // Animate all blanks green
+    for(let i=0;i<currentWord.length;i++){
+      setTimeout(()=>{
+        const b=document.getElementById('blank'+i);
+        b.classList.add('correct-anim');
+        b.style.borderColor='var(--green)';
+        b.style.background='#E8FFE8';
+        b.style.color='#2a8a40';
+      },i*60);
+    }
+    showFeedback('✅','Betul! +'+pts,true);
+    setTimeout(()=>{qIdx++;loadQuestion();},1400);
+  } else {
+    // WRONG
+    sndWrong();
+    // Shake all blanks
+    for(let i=0;i<currentWord.length;i++){
+      const b=document.getElementById('blank'+i);
+      b.classList.add('wrong-flash'); // reuse wrong-flash
+      setTimeout(()=>b.classList.remove('wrong-flash'),400);
+    }
+    // Style with wrong color
+    document.querySelectorAll('.blank').forEach(b=>{b.style.borderColor='var(--red)';b.style.background='#FFE8E8';});
+    showFeedback('❌','Jawaban: '+currentWord,false);
+    loseLife(true);
+  }
+}
+
+function loseLife(fromWrong=false){
+  if(lives>0) lives--;
+  // Update life UI
+  for(let i=0;i<3;i++){
+    const lEl=document.getElementById('life'+i);
+    if(lEl) lEl.classList.toggle('lost', i>=lives);
+  }
+  if(!fromWrong) showFeedback('⏰','Waktu Habis!\n'+currentWord, false);
+  setTimeout(()=>{
+    if(lives<=0){ showResult(); return; }
+    qIdx++;
+    loadQuestion();
+  }, fromWrong?1600:1400);
+}
+
+function skipSoal(){
+  if(answered) return;
+  sndTap();
+  clearInterval(timerInterval);
+  answered=true;
+  showFeedback('⏭','Jawaban: '+currentWord,false);
+  if(lives>0) lives--;
+  for(let i=0;i<3;i++){
+    const lEl=document.getElementById('life'+i);
+    if(lEl) lEl.classList.toggle('lost', i>=lives);
+  }
+  setTimeout(()=>{
+    if(lives<=0){ showResult(); return; }
+    qIdx++;
+    loadQuestion();
+  },1300);
+}
+
+// =============================================
+// FEEDBACK OVERLAY
+// =============================================
+let fbTimeout=null;
+function showFeedback(ico, msg, good){
+  const el=document.getElementById('feedback');
+  const box=el.querySelector('.fb-box');
+  document.getElementById('fbIco').textContent=ico;
+  document.getElementById('fbMsg').textContent=msg;
+  box.style.borderTop=`5px solid ${good?'var(--green)':'var(--red)'}`;
+  el.classList.add('show');
+  clearTimeout(fbTimeout);
+  fbTimeout=setTimeout(()=>el.classList.remove('show'),1200);
+}
+
+// =============================================
+// FLY LETTER PARTICLE
+// =============================================
+function flyLetter(letter, fromEl){
+  const rect=fromEl.getBoundingClientRect();
+  const fl=document.createElement('div');
+  fl.className='fly-letter';
+  fl.textContent=letter;
+  fl.style.left=rect.left+rect.width/2+'px';
+  fl.style.top=rect.top+'px';
+  fl.style.color=fromEl.style.background;
+  document.body.appendChild(fl);
+  setTimeout(()=>fl.remove(),800);
+}
+
+// =============================================
+// RESULT
+// =============================================
+function showResult(){
+  clearInterval(timerInterval);
+  const maxScore=totalQ*200;
+  const pct=score/maxScore;
+  let stars=pct>=.8?3:pct>=.5?2:1;
+  let emoji=stars===3?'🏆':stars===2?'🥈':'🥉';
+  let title=stars===3?'Luar Biasa!':stars===2?'Bagus!':'Terus Semangat!';
+
+  if(score>hiScore){hiScore=score;document.getElementById('hiScoreDisp').textContent=hiScore;}
+
+  document.getElementById('resEmoji').textContent=emoji;
+  document.getElementById('resTitle').textContent=title;
+  document.getElementById('resScore').textContent=score;
+  document.getElementById('resDetail').textContent='dari '+maxScore+' poin maksimal';
+  document.getElementById('resStars').textContent='⭐'.repeat(stars);
+
+  if(stars===3){ sndWin(); launchConfetti(); }
+  else sndCorrect();
+
+  showScreen('resultScreen');
+}
+
+// =============================================
+// CONFETTI
+// =============================================
+const ccv=document.getElementById('confCv');
+const cctx=ccv.getContext('2d');
+let cparts=[],craf=null;
+function launchConfetti(){
+  ccv.width=window.innerWidth;ccv.height=window.innerHeight;
+  cparts=[];
+  const cols=['#FF6B9D','#FFD93D','#6BCB77','#C77DFF','#FF9A3C','#4ECDC4','#ff4757'];
+  for(let i=0;i<130;i++){
+    cparts.push({x:Math.random()*ccv.width,y:-20,vx:(Math.random()-.5)*6,vy:2+Math.random()*5,r:4+Math.random()*6,col:cols[Math.floor(Math.random()*cols.length)],rot:Math.random()*360,rotV:(Math.random()-.5)*10});
+  }
+  cancelAnimationFrame(craf);
+  animConf();
+  setTimeout(()=>{cancelAnimationFrame(craf);cctx.clearRect(0,0,ccv.width,ccv.height);},4500);
+}
+function animConf(){
+  cctx.clearRect(0,0,ccv.width,ccv.height);
+  cparts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.rot+=p.rotV;cctx.save();cctx.translate(p.x,p.y);cctx.rotate(p.rot*Math.PI/180);cctx.fillStyle=p.col;cctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);cctx.restore();});
+  cparts=cparts.filter(p=>p.y<ccv.height+30);
+  if(cparts.length>0) craf=requestAnimationFrame(animConf);
+}
+
+// =============================================
+// SCREEN
+// =============================================
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showMenu(){
+  clearInterval(timerInterval);
+  showScreen('menuScreen');
+}
+
+document.addEventListener('touchstart',()=>{try{getAC();}catch(e){}},{once:false});
+</script>
+</body>
+</html>

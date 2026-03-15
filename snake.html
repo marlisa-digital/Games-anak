@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🐍 Ular!</title>
+<link href="https://fonts.googleapis.com/css2?family=Righteous&family=Nunito:wght@800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;touch-action:none;background:#0a0f0a;}
+body{font-family:'Nunito',sans-serif;}
+
+canvas{display:block;position:fixed;top:0;left:0;image-rendering:pixelated;}
+
+/* UI overlay */
+#ui{position:fixed;top:0;left:0;width:100%;z-index:10;pointer-events:none;}
+#hud{display:none;align-items:center;justify-content:space-between;padding:10px 14px 6px;}
+.hpill{background:rgba(0,0,0,.7);border:1.5px solid rgba(57,255,20,.25);border-radius:12px;padding:5px 16px;text-align:center;backdrop-filter:blur(6px);}
+.hl{font-size:.5rem;font-weight:800;letter-spacing:2px;color:rgba(57,255,20,.5);}
+.hv{font-family:'Righteous',cursive;font-size:1.5rem;color:#fff;line-height:1.1;}
+.hv.g{color:#39FF14;text-shadow:0 0 8px #39FF1488;}
+.hv.y{color:#FFD93D;text-shadow:0 0 8px #FFD93D88;}
+
+/* D-pad buttons */
+#dpad{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:180px;height:180px;z-index:20;display:none;}
+.dpbtn{position:absolute;width:54px;height:54px;background:rgba(0,0,0,.7);border:2px solid rgba(57,255,20,.5);
+  border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;
+  cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:none;
+  transition:background .08s,transform .08s;}
+.dpbtn:active,.dpbtn.on{background:rgba(57,255,20,.2);transform:scale(.88);}
+#dUp   {top:0;   left:50%;transform:translateX(-50%);}
+#dDown {bottom:0;left:50%;transform:translateX(-50%);}
+#dLeft {left:0;  top:50%;transform:translateY(-50%);}
+#dRight{right:0; top:50%;transform:translateY(-50%);}
+
+/* score popup */
+.spop{position:fixed;font-family:'Righteous',cursive;font-size:1.8rem;pointer-events:none;z-index:20;
+  animation:sfly .7s ease forwards;}
+@keyframes sfly{0%{opacity:1;transform:translateY(0) scale(.8)}100%{opacity:0;transform:translateY(-70px) scale(1.2)}}
+
+/* SCREENS */
+.scr{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;z-index:30;padding:20px 24px;text-align:center;pointer-events:all;}
+.scr.on{display:flex;}
+#menuScr{background:radial-gradient(ellipse at 50% 40%,#0d2010 0%,#050a05 100%);}
+#pauseScr{background:rgba(0,0,0,.85);}
+#dieScr{background:rgba(5,10,5,.95);}
+
+/* snake logo */
+.snake-title{font-family:'Righteous',cursive;font-size:3.8rem;color:#39FF14;
+  text-shadow:0 0 16px #39FF14,0 0 40px #39FF1444;line-height:.9;letter-spacing:2px;}
+.snake-sub{font-size:.65rem;font-weight:800;letter-spacing:4px;color:rgba(57,255,20,.5);margin-bottom:4px;}
+.snake-hero{font-size:4.5rem;animation:sHero 2s ease-in-out infinite;display:block;}
+@keyframes sHero{
+  0%,100%{transform:scaleX(1) rotate(0deg)}
+  25%{transform:scaleX(1.08) rotate(2deg)}
+  75%{transform:scaleX(.94) rotate(-2deg)}
+}
+
+/* scoreboard */
+.sboard{background:rgba(0,0,0,.5);border:2px solid rgba(57,255,20,.3);border-radius:16px;
+  padding:10px 28px;box-shadow:0 0 20px rgba(57,255,20,.1),inset 0 0 20px rgba(57,255,20,.03);}
+.sbl{font-size:.55rem;font-weight:800;letter-spacing:3px;color:rgba(57,255,20,.5);}
+.sbv{font-family:'Righteous',cursive;font-size:2.2rem;color:#FFD93D;text-shadow:0 0 10px #FFD93D;}
+
+/* diff */
+.drow{display:flex;gap:8px;width:100%;}
+.dcard{flex:1;padding:10px 6px;border-radius:14px;border:2px solid;background:rgba(0,0,0,.4);
+  cursor:pointer;text-align:center;transition:all .2s;font-family:'Righteous',cursive;font-size:.95rem;}
+.dcard.c1{border-color:#39FF14;color:#39FF14;}
+.dcard.c2{border-color:#FFD93D;color:#FFD93D;}
+.dcard.c3{border-color:#FF3CAC;color:#FF3CAC;}
+.dcard.sel,.dcard:active{background:rgba(255,255,255,.1);transform:scale(1.05);}
+.dcard small{display:block;font-family:'Nunito',sans-serif;font-size:.52rem;font-weight:800;opacity:.6;letter-spacing:1px;}
+
+/* buttons */
+.gbtn{font-family:'Righteous',cursive;font-size:1.5rem;letter-spacing:2px;
+  background:linear-gradient(135deg,#39FF14,#00cc00);color:#000;
+  border:none;border-radius:50px;padding:14px 52px;cursor:pointer;
+  box-shadow:0 0 20px #39FF1466,0 5px 0 #006600;transition:all .15s;}
+.gbtn:active{transform:translateY(4px);box-shadow:0 0 10px #39FF1444,0 1px 0 #006600;}
+.gbtn.sec{background:transparent;color:#39FF14;border:2px solid #39FF14;
+  box-shadow:0 0 10px #39FF1433;padding:11px 28px;font-size:1.1rem;}
+
+/* die screen */
+.die-skull{font-size:4rem;animation:skl .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes skl{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(5deg)}}
+.die-title{font-family:'Righteous',cursive;font-size:2.6rem;color:#FF3CAC;
+  text-shadow:0 0 20px #FF3CAC;}
+.die-score{font-family:'Righteous',cursive;font-size:4.5rem;color:#39FF14;
+  text-shadow:0 0 20px #39FF14;animation:dpop .4s .1s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes dpop{from{transform:scale(0)}to{transform:scale(1)}}
+.die-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;}
+.die-stat{background:rgba(255,255,255,.05);border-radius:12px;padding:10px;
+  border:1px solid rgba(57,255,20,.15);}
+.dsl{font-size:.5rem;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.35);}
+.dsv{font-family:'Righteous',cursive;font-size:1.7rem;color:#fff;}
+.die-btns{display:flex;gap:10px;margin-top:4px;}
+
+/* confetti */
+#confCv{position:fixed;inset:0;pointer-events:none;z-index:25;}
+
+/* swipe hint */
+#swipeHint{position:fixed;bottom:200px;width:100%;text-align:center;
+  font-size:.6rem;font-weight:800;letter-spacing:2px;color:rgba(57,255,20,.4);
+  animation:hint 1.5s ease-in-out infinite;pointer-events:none;z-index:10;display:none;}
+@keyframes hint{0%,100%{opacity:.3}50%{opacity:.8}}
+</style>
+</head>
+<body>
+<canvas id="gc"></canvas>
+<canvas id="confCv"></canvas>
+
+<div id="ui">
+  <div id="hud">
+    <div class="hpill"><div class="hl">SKOR</div><div class="hv g" id="sHud">0</div></div>
+    <div class="hpill"><div class="hl">LEVEL</div><div class="hv y" id="lHud">1</div></div>
+    <div class="hpill"><div class="hl">BEST</div><div class="hv" id="bHud">0</div></div>
+  </div>
+</div>
+
+<div id="dpad">
+  <div class="dpbtn" id="dUp"   >⬆️</div>
+  <div class="dpbtn" id="dDown" >⬇️</div>
+  <div class="dpbtn" id="dLeft" >⬅️</div>
+  <div class="dpbtn" id="dRight">➡️</div>
+</div>
+
+<div id="swipeHint">SWIPE ATAU PAKAI TOMBOL ARAH</div>
+
+<!-- MENU -->
+<div class="scr on" id="menuScr">
+  <span class="snake-hero">🐍</span>
+  <div class="snake-title">ULAR</div>
+  <div class="snake-sub">SNAKE GAME</div>
+  <div class="sboard">
+    <div class="sbl">SKOR TERBAIK</div>
+    <div class="sbv" id="bestDisp">0</div>
+  </div>
+  <div class="drow">
+    <div class="dcard c1 sel" onclick="pickDiff('easy',this)">SANTAI<small>LAMBAT</small></div>
+    <div class="dcard c2"     onclick="pickDiff('med',this)" >SERU<small>SEDANG</small></div>
+    <div class="dcard c3"     onclick="pickDiff('hard',this)">GILA!<small>NGEBUT</small></div>
+  </div>
+  <button class="gbtn" onclick="startGame()">▶ MAIN!</button>
+</div>
+
+<!-- PAUSE -->
+<div class="scr" id="pauseScr">
+  <div style="font-family:'Righteous',cursive;font-size:2.5rem;color:#FFD93D;">PAUSE ⏸</div>
+  <button class="gbtn" onclick="resumeGame()">▶ LANJUT</button>
+  <button class="gbtn sec" onclick="goMenu()">🏠 MENU</button>
+</div>
+
+<!-- GAME OVER -->
+<div class="scr" id="dieScr">
+  <div class="die-skull" id="dieIco">💀</div>
+  <div class="die-title">GAME OVER</div>
+  <div class="die-score" id="dieScore">0</div>
+  <div style="font-size:.55rem;font-weight:800;letter-spacing:3px;color:rgba(255,255,255,.3);">POIN</div>
+  <div class="die-grid">
+    <div class="die-stat"><div class="dsl">BUAH</div><div class="dsv" id="dBuah">0</div></div>
+    <div class="die-stat"><div class="dsl">PANJANG</div><div class="dsv" id="dPjg">0</div></div>
+    <div class="die-stat"><div class="dsl">LEVEL</div><div class="dsv" id="dLvl">0</div></div>
+    <div class="die-stat"><div class="dsl">SKOR BEST</div><div class="dsv" id="dBest">0</div></div>
+  </div>
+  <div class="die-btns">
+    <button class="gbtn" onclick="startGame()">🔄 LAGI!</button>
+    <button class="gbtn sec" onclick="goMenu()">🏠 MENU</button>
+  </div>
+</div>
+
+<script>
+const gc = document.getElementById('gc');
+const ctx = gc.getContext('2d');
+let W, H, COLS, ROWS, CELL;
+
+function resize(){
+  W = gc.width  = window.innerWidth;
+  H = gc.height = window.innerHeight;
+  CELL = Math.floor(Math.min(W, H) / 22);
+  COLS = Math.floor(W / CELL);
+  ROWS = Math.floor((H - 80) / CELL); // leave room for HUD
+  OFFSET_Y = Math.floor((H - ROWS*CELL) / 2);
+}
+let OFFSET_Y = 0;
+resize();
+window.addEventListener('resize', resize);
+
+// =============================================
+// CONFIG
+// =============================================
+const SPEEDS = {easy:180, med:120, hard:72};
+const FOODS = ['🍎','🍊','🍋','🍇','🍓','🍑','🥝','🍒','🫐','🥭'];
+const SPECIALS = ['💎','⭐','🔥','💰'];
+let diff = 'easy';
+let best = 0;
+
+// =============================================
+// STATE
+// =============================================
+let snake=[], dir={x:1,y:0}, nextDir={x:1,y:0};
+let food=[], specialFood=null, specialTimer=0;
+let score=0, level=1, eaten=0;
+let gameOn=false, paused=false;
+let stepTimer=0, stepInterval=180;
+let particles=[];
+
+// =============================================
+// AUDIO
+// =============================================
+let _ac=null;
+function ac(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume();return _ac;}
+function beep(f,d,t,v,dl){try{const a=ac(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type=t||'sine';o.frequency.setValueAtTime(f,a.currentTime+(dl||0));g.gain.setValueAtTime(v||.3,a.currentTime+(dl||0));g.gain.exponentialRampToValueAtTime(.001,a.currentTime+(dl||0)+d);o.start(a.currentTime+(dl||0));o.stop(a.currentTime+(dl||0)+d+.05);}catch(e){}}
+function sndEat(){beep(523,.08,'triangle',.3,0);beep(659,.1,'triangle',.3,.07);}
+function sndSpecial(){[523,659,784,1047].forEach((f,i)=>beep(f,.12,'triangle',.3,i*.06));}
+function sndDie(){beep(300,.15,'sawtooth',.4,0);beep(200,.2,'sawtooth',.35,.1);beep(100,.3,'sawtooth',.3,.2);}
+function sndLevel(){[784,1047,1319,1568].forEach((f,i)=>beep(f,.15,'triangle',.3,i*.08));}
+function sndTurn(){beep(880,.04,'square',.08);}
+
+// =============================================
+// INPUT
+// =============================================
+function pickDiff(d,el){
+  diff=d;
+  document.querySelectorAll('.dcard').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// Keyboard
+window.addEventListener('keydown', e=>{
+  if(!gameOn) return;
+  if(e.key==='Escape'||e.key===' '){ togglePause(); return; }
+  const map={'ArrowUp':{x:0,y:-1},'ArrowDown':{x:0,y:1},'ArrowLeft':{x:-1,y:0},'ArrowRight':{x:1,y:0},
+             'w':{x:0,y:-1},'s':{x:0,y:1},'a':{x:-1,y:0},'d':{x:1,y:0}};
+  const nd = map[e.key];
+  if(nd) setDir(nd);
+});
+
+// D-pad buttons
+function bindDpad(id, nd){
+  const b = document.getElementById(id);
+  function press(e){ e.preventDefault(); if(gameOn&&!paused) setDir(nd); b.classList.add('on'); }
+  function release(){ b.classList.remove('on'); }
+  b.addEventListener('touchstart', press, {passive:false});
+  b.addEventListener('touchend',   release);
+  b.addEventListener('touchcancel',release);
+  b.addEventListener('mousedown',  press);
+  b.addEventListener('mouseup',    release);
+  b.addEventListener('mouseleave', release);
+}
+bindDpad('dUp',    {x:0,y:-1});
+bindDpad('dDown',  {x:0,y:1});
+bindDpad('dLeft',  {x:-1,y:0});
+bindDpad('dRight', {x:1,y:0});
+// Swipe
+let swipeStart=null;
+window.addEventListener('touchstart',e=>{
+  if(!gameOn||paused) return;
+  const t=e.touches[0];
+  swipeStart={x:t.clientX,y:t.clientY};
+},{passive:true});
+window.addEventListener('touchend',e=>{
+  if(!gameOn||paused||!swipeStart) return;
+  const t=e.changedTouches[0];
+  const dx=t.clientX-swipeStart.x, dy=t.clientY-swipeStart.y;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist<20){swipeStart=null;return;}
+  if(Math.abs(dx)>Math.abs(dy)) setDir({x:dx>0?1:-1,y:0});
+  else setDir({x:0,y:dy>0?1:-1});
+  swipeStart=null;
+},{passive:true});
+
+function setDir(nd){
+  // Prevent reversing
+  if(nd.x===-dir.x&&nd.y===0) return;
+  if(nd.y===-dir.y&&nd.x===0) return;
+  nextDir=nd;
+  sndTurn();
+}
+
+function togglePause(){
+  if(!gameOn) return;
+  paused=!paused;
+  if(paused) document.getElementById('pauseScr').classList.add('on');
+  else document.getElementById('pauseScr').classList.remove('on');
+}
+function resumeGame(){
+  paused=false;
+  document.getElementById('pauseScr').classList.remove('on');
+}
+
+// =============================================
+// START
+// =============================================
+function startGame(){
+  resize();
+  score=0; level=1; eaten=0; paused=false;
+  particles=[];
+  stepInterval=SPEEDS[diff];
+  accT=0; // reset accumulator
+
+  // Init snake in center
+  const mx=Math.floor(COLS/2), my=Math.floor(ROWS/2);
+  snake=[{x:mx,y:my},{x:mx-1,y:my},{x:mx-2,y:my},{x:mx-3,y:my}];
+  dir={x:1,y:0}; nextDir={x:1,y:0};
+
+  food=[];
+  spawnFood(); spawnFood();
+  specialFood=null; specialTimer=0;
+
+  hideScreens();
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('dpad').style.display='block';
+
+  document.getElementById('swipeHint').style.display='block';
+  setTimeout(()=>document.getElementById('swipeHint').style.display='none',3000);
+  updateHUD();
+  gameOn=true;
+  lastT=performance.now();
+  requestAnimationFrame(loop);
+}
+
+// =============================================
+// FOOD SPAWN
+// =============================================
+function spawnFood(){
+  let pos, tries=0, valid=false;
+  do{
+    pos={x:Math.floor(Math.random()*COLS), y:Math.floor(Math.random()*ROWS)};
+    tries++;
+    if(!onSnake(pos)&&!onFood(pos)){valid=true;break;}
+  }while(tries<200);
+  if(!valid) return; // grid penuh, skip
+  food.push({...pos, ico:FOODS[Math.floor(Math.random()*FOODS.length)], pts:10, age:0});
+}
+
+function spawnSpecial(){
+  let pos, tries=0;
+  do{pos={x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)};tries++;}
+  while(tries<200&&(onSnake(pos)||onFood(pos)));
+  specialFood={...pos, ico:SPECIALS[Math.floor(Math.random()*SPECIALS.length)], pts:50, age:0, ttl:120};
+}
+
+function onSnake(p){ return snake.some(s=>s.x===p.x&&s.y===p.y); }
+function onFood(p){ return food.some(f=>f.x===p.x&&f.y===p.y)||(specialFood&&specialFood.x===p.x&&specialFood.y===p.y); }
+
+// =============================================
+// GAME LOOP
+// =============================================
+let lastT=0, accT=0;
+function loop(ts){
+  const dt=ts-lastT; lastT=ts;
+  if(!paused){
+    accT+=dt;
+    if(accT>=stepInterval){ accT-=stepInterval; step(); }
+    updateParticles(dt);
+  }
+  draw();
+  if(gameOn) requestAnimationFrame(loop);
+}
+
+function step(){
+  dir={...nextDir};
+  const head={x:snake[0].x+dir.x, y:snake[0].y+dir.y};
+
+  // Wall collision — wrap around
+  head.x=(head.x+COLS)%COLS;
+  head.y=(head.y+ROWS)%ROWS;
+
+  // Self collision
+  if(snake.some(s=>s.x===head.x&&s.y===head.y)){
+    die(); return;
+  }
+
+  snake.unshift(head);
+
+  // Check food
+  let ate=false;
+  const fi=food.findIndex(f=>f.x===head.x&&f.y===head.y);
+  if(fi!==-1){
+    ate=true;
+    const f=food.splice(fi,1)[0];
+    const pts=f.pts*level;
+    addScore(pts);
+    eaten++;
+    sndEat();
+    spawnParticles(head.x,head.y,'#39FF14');
+    showPop(head.x*CELL+CELL/2, head.y*CELL+OFFSET_Y, '+'+pts, '#39FF14');
+    spawnFood();
+    // Every 5 fruits = level up
+    if(eaten%5===0) levelUp();
+    // Spawn special occasionally
+    if(!specialFood && Math.random()<0.3) spawnSpecial();
+  }
+
+  // Check special food
+  if(specialFood&&head.x===specialFood.x&&head.y===specialFood.y){
+    ate=true;
+    addScore(specialFood.pts*level);
+    sndSpecial();
+    spawnParticles(head.x,head.y,'#FFD93D');
+    showPop(head.x*CELL+CELL/2, head.y*CELL+OFFSET_Y, '+'+specialFood.pts*level, '#FFD93D');
+    specialFood=null;
+  }
+
+  if(!ate) snake.pop();
+
+  // Age special food
+  if(specialFood){
+    specialFood.age++;
+    if(specialFood.age>specialFood.ttl) specialFood=null;
+  }
+  food.forEach(f=>f.age++);
+}
+
+function addScore(pts){
+  score+=pts;
+  if(score>best) best=score;
+  updateHUD();
+}
+
+function levelUp(){
+  level++;
+  stepInterval=Math.max(60, SPEEDS[diff]-((level-1)*12));
+  sndLevel();
+  showPop(W/2, H/2, '⬆️ LEVEL '+level+'!', '#FFD93D');
+  updateHUD();
+}
+
+function updateHUD(){
+  document.getElementById('sHud').textContent=score;
+  document.getElementById('lHud').textContent=level;
+  document.getElementById('bHud').textContent=best;
+}
+
+// =============================================
+// PARTICLES
+// =============================================
+function spawnParticles(gx,gy,col){
+  const px=gx*CELL+CELL/2, py=gy*CELL+OFFSET_Y+CELL/2;
+  for(let i=0;i<8;i++){
+    const ang=Math.random()*Math.PI*2;
+    const spd=1+Math.random()*3;
+    particles.push({x:px,y:py,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,life:1,col,r:2+Math.random()*3});
+  }
+}
+function updateParticles(dt){
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.08;p.life-=0.04;});
+  particles=particles.filter(p=>p.life>0);
+}
+
+// =============================================
+// DRAW
+// =============================================
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  drawBg();
+  drawFood();
+  drawSnake();
+  drawParticles();
+}
+
+function drawBg(){
+  // Dark grid
+  const gx=CELL, gy=CELL;
+  ctx.fillStyle='#0a0f0a';
+  ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(57,255,20,.04)';
+  ctx.lineWidth=1;
+  for(let x=0;x<=COLS;x++){
+    ctx.beginPath();ctx.moveTo(x*gx,OFFSET_Y);ctx.lineTo(x*gx,OFFSET_Y+ROWS*gy);ctx.stroke();
+  }
+  for(let y=0;y<=ROWS;y++){
+    ctx.beginPath();ctx.moveTo(0,OFFSET_Y+y*gy);ctx.lineTo(COLS*gx,OFFSET_Y+y*gy);ctx.stroke();
+  }
+  // Border glow
+  ctx.strokeStyle='rgba(57,255,20,.2)';
+  ctx.lineWidth=2;
+  ctx.strokeRect(0,OFFSET_Y,COLS*CELL,ROWS*CELL);
+}
+
+function drawFood(){
+  // Regular food
+  food.forEach(f=>{
+    const px=f.x*CELL, py=f.y*CELL+OFFSET_Y;
+    const pulse=1+Math.sin(f.age*.12)*.08;
+    // Glow
+    ctx.shadowColor='#39FF14';
+    ctx.shadowBlur=8;
+    ctx.font=`${Math.round(CELL*0.75*pulse)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(f.ico, px+CELL/2, py+CELL/2);
+    ctx.shadowBlur=0;
+  });
+
+  // Special food
+  if(specialFood){
+    const f=specialFood;
+    const px=f.x*CELL, py=f.y*CELL+OFFSET_Y;
+    const t=1-(f.age/f.ttl);
+    const pulse=1+Math.sin(f.age*.2)*.15;
+    // Countdown ring
+    ctx.strokeStyle=`rgba(255,217,61,${t*.8})`;
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.arc(px+CELL/2, py+CELL/2, CELL*.55, -Math.PI/2, -Math.PI/2+Math.PI*2*t);
+    ctx.stroke();
+    ctx.shadowColor='#FFD93D';
+    ctx.shadowBlur=16;
+    ctx.font=`${Math.round(CELL*0.8*pulse)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(f.ico, px+CELL/2, py+CELL/2);
+    ctx.shadowBlur=0;
+  }
+}
+
+function drawSnake(){
+  const len=snake.length;
+  snake.forEach((seg,i)=>{
+    const px=seg.x*CELL, py=seg.y*CELL+OFFSET_Y;
+    const t=1-(i/len);
+
+    if(i===0){
+      // Head — bright neon green
+      ctx.shadowColor='#39FF14';
+      ctx.shadowBlur=16;
+      const g=ctx.createRadialGradient(px+CELL*.4,py+CELL*.35,1,px+CELL/2,py+CELL/2,CELL*.55);
+      g.addColorStop(0,'#80FF50');
+      g.addColorStop(1,'#00CC00');
+      roundRect(ctx, px+1, py+1, CELL-2, CELL-2, CELL*.35);
+      ctx.fillStyle=g; ctx.fill();
+      ctx.shadowBlur=0;
+
+      // Eyes
+      const ex=px+CELL/2, ey=py+CELL/2;
+      const eyeOff=CELL*.18;
+      // Eye direction
+      const ed={x:dir.x*CELL*.12, y:dir.y*CELL*.12};
+      const perp={x:-dir.y, y:dir.x};
+      [[1,-1],[-1,-1]].forEach(([s])=>{
+        const ex2=ex+perp.x*eyeOff*s+ed.x;
+        const ey2=ey+perp.y*eyeOff*s+ed.y;
+        ctx.beginPath();ctx.arc(ex2,ey2,CELL*.1,0,Math.PI*2);
+        ctx.fillStyle='#fff';ctx.fill();
+        ctx.beginPath();ctx.arc(ex2+ed.x*.5,ey2+ed.y*.5,CELL*.055,0,Math.PI*2);
+        ctx.fillStyle='#000';ctx.fill();
+      });
+      // Tongue
+      if(Math.floor(Date.now()/400)%2===0){
+        const tx=ex+dir.x*CELL*.52, ty=ey+dir.y*CELL*.52;
+        ctx.strokeStyle='#FF3CAC'; ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.moveTo(ex+dir.x*CELL*.35,ey+dir.y*CELL*.35);ctx.lineTo(tx,ty);ctx.stroke();
+        const fk=CELL*.1;
+        ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(tx+dir.x*fk+perp.x*fk*.8,ty+dir.y*fk+perp.y*fk*.8);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(tx+dir.x*fk-perp.x*fk*.8,ty+dir.y*fk-perp.y*fk*.8);ctx.stroke();
+      }
+    } else {
+      // Body segments — gradient green to dark
+      const green=`hsl(${120+i*1.5},${90-i*.8}%,${45-i*.6}%)`;
+      const alpha=Math.max(0.4,t);
+      ctx.globalAlpha=alpha;
+      ctx.shadowColor='#39FF14';
+      ctx.shadowBlur=i<5?8:3;
+      roundRect(ctx, px+2, py+2, CELL-4, CELL-4, CELL*.3);
+      ctx.fillStyle=green; ctx.fill();
+      ctx.shadowBlur=0;
+      ctx.globalAlpha=1;
+
+      // Scale pattern on body
+      if(i%2===0 && i>0){
+        ctx.globalAlpha=0.15;
+        ctx.fillStyle='#000';
+        ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,CELL*.28,0,Math.PI*2);ctx.fill();
+        ctx.globalAlpha=1;
+      }
+    }
+  });
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+function drawParticles(){
+  particles.forEach(p=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.globalAlpha=p.life;
+    ctx.fillStyle=p.col;ctx.fill();
+    ctx.globalAlpha=1;
+  });
+}
+
+// =============================================
+// SCORE POPUP
+// =============================================
+function showPop(x,y,txt,col){
+  const p=document.createElement('div');
+  p.className='spop';p.textContent=txt;p.style.color=col;
+  p.style.left=(x-30)+'px';p.style.top=(y-10)+'px';
+  document.body.appendChild(p);
+  setTimeout(()=>p.remove(),800);
+}
+
+// =============================================
+// CONFETTI
+// =============================================
+const ccv=document.getElementById('confCv');
+const cctx=ccv.getContext('2d');
+let cp=[],cr=null;
+function launchConf(){
+  ccv.width=W;ccv.height=H;cp=[];
+  const cols=['#39FF14','#FFD93D','#FF3CAC','#4ECDC4','#fff'];
+  for(let i=0;i<120;i++) cp.push({x:Math.random()*W,y:-20,vx:(Math.random()-.5)*6,vy:2+Math.random()*5,r:3+Math.random()*6,col:cols[i%cols.length],rot:Math.random()*360,rv:(Math.random()-.5)*10});
+  cancelAnimationFrame(cr);animC();
+  setTimeout(()=>{cancelAnimationFrame(cr);cctx.clearRect(0,0,W,H);},4000);
+}
+function animC(){
+  cctx.clearRect(0,0,W,H);
+  cp.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.rot+=p.rv;cctx.save();cctx.translate(p.x,p.y);cctx.rotate(p.rot*Math.PI/180);cctx.fillStyle=p.col;cctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);cctx.restore();});
+  cp=cp.filter(p=>p.y<H+30);
+  if(cp.length>0) cr=requestAnimationFrame(animC);
+}
+
+// =============================================
+// DIE
+// =============================================
+function die(){
+  gameOn=false;
+  sndDie();
+  if(score>best) best=score;
+
+  document.getElementById('dieScore').textContent=score;
+  document.getElementById('dBuah').textContent=eaten;
+  document.getElementById('dPjg').textContent=snake.length;
+  document.getElementById('dLvl').textContent=level;
+  document.getElementById('dBest').textContent=best;
+  document.getElementById('bestDisp').textContent=best;
+
+  if(score>=500) launchConf();
+
+  document.getElementById('hud').style.display='none';
+  document.getElementById('dpad').style.display='none';
+
+  document.getElementById('dieScr').classList.add('on');
+}
+
+// =============================================
+// SCREENS
+// =============================================
+function hideScreens(){
+  ['menuScr','pauseScr','dieScr'].forEach(id=>document.getElementById(id).classList.remove('on'));
+}
+function goMenu(){
+  gameOn=false;paused=false;
+  document.getElementById('hud').style.display='none';
+  document.getElementById('dpad').style.display='none';
+  document.getElementById('swipeHint').style.display='none';
+  hideScreens();
+  document.getElementById('menuScr').classList.add('on');
+}
+
+window.addEventListener('touchstart',()=>{try{ac();}catch(e){}},{once:false,passive:true});
+</script>
+</body>
+</html>

@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🔨 Pukul Hewan!</title>
+<link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a0a2e;
+  --bg2:#2d1052;
+  --neon1:#FF3CAC;
+  --neon2:#FFD93D;
+  --neon3:#4ECDC4;
+  --neon4:#FF6B35;
+  --green:#39FF14;
+  --hole:#0d0520;
+  --dirt:#7B4F2E;
+  --dirt2:#A06830;
+  --grass:#2ECC40;
+  --grass2:#27AE34;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+
+body{
+  font-family:'Nunito',sans-serif;
+  background:var(--bg);
+  min-height:100vh;
+  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3C!-- Gagang --%3E%3Crect x='52' y='42' width='14' height='50' rx='6' fill='%23795548'/%3E%3Crect x='54' y='42' width='6' height='50' rx='3' fill='%23A1887F'/%3E%3C!-- Kepala palu --%3E%3Crect x='6' y='8' width='68' height='40' rx='10' fill='%23D32F2F'/%3E%3Crect x='6' y='8' width='68' height='18' rx='10' fill='%23EF5350'/%3E%3C!-- Highlight --%3E%3Crect x='14' y='14' width='46' height='9' rx='5' fill='%23EF9A9A' opacity='0.5'/%3E%3C!-- Ujung logam kiri --%3E%3Crect x='6' y='8' width='13' height='40' rx='5' fill='%23757575'/%3E%3Crect x='7' y='10' width='6' height='14' rx='3' fill='%23BDBDBD' opacity='0.6'/%3E%3C!-- Ujung logam kanan --%3E%3Crect x='61' y='8' width='13' height='40' rx='5' fill='%23757575'/%3E%3Crect x='62' y='10' width='6' height='14' rx='3' fill='%23BDBDBD' opacity='0.6'/%3E%3C/svg%3E") 38 48, pointer;
+}
+
+/* Arcade scanlines overlay */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);
+}
+
+/* Neon grid bg */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;
+  background:
+    linear-gradient(rgba(255,60,172,0.06) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,60,172,0.06) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+
+#app{
+  width:100vw;max-width:600px;height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:10px 10px 6px;position:relative;
+  overflow:hidden;
+}
+
+/* ===== SCREENS ===== */
+.screen{width:100%;display:none;flex-direction:column;align-items:center;flex:1;}
+.screen.active{display:flex;}
+
+/* ===== MENU ===== */
+#menuScreen{justify-content:center;gap:8px;text-align:center;}
+
+.arcade-sign{
+  font-family:'Boogaloo',cursive;
+  font-size:3rem;line-height:1;
+  color:#fff;
+  text-shadow:0 0 10px var(--neon1),0 0 30px var(--neon1),0 0 60px var(--neon1);
+  animation:signFlicker 3s ease-in-out infinite;
+}
+@keyframes signFlicker{0%,90%,100%{opacity:1}92%{opacity:.7}94%{opacity:1}96%{opacity:.8}98%{opacity:1}}
+
+.arcade-sub{
+  font-size:.75rem;font-weight:800;letter-spacing:3px;
+  color:var(--neon2);text-shadow:0 0 8px var(--neon2);
+  margin-bottom:4px;
+}
+
+.big-mole{font-size:5rem;animation:molePreview 1.5s ease-in-out infinite;display:block;margin:4px 0;}
+@keyframes molePreview{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-12px) rotate(5deg)}}
+
+/* neon score board */
+.scoreboard{
+  background:rgba(0,0,0,0.5);
+  border:2px solid var(--neon2);
+  border-radius:16px;
+  padding:10px 28px;
+  box-shadow:0 0 14px var(--neon2)44,inset 0 0 20px rgba(255,217,61,0.05);
+  margin:4px 0;
+}
+.sb-label{font-size:.55rem;font-weight:800;letter-spacing:3px;color:var(--neon2);opacity:.7;}
+.sb-val{font-family:'Boogaloo',cursive;font-size:2rem;color:var(--neon2);text-shadow:0 0 10px var(--neon2);}
+
+/* diff buttons */
+.diff-row{display:flex;gap:8px;width:100%;}
+.diff-btn{
+  flex:1;padding:10px 6px;
+  border:2px solid transparent;border-radius:14px;
+  background:rgba(255,255,255,0.06);
+  cursor:pointer;text-align:center;transition:all .2s;
+  font-family:'Boogaloo',cursive;
+}
+.diff-btn.d1{border-color:var(--green);color:var(--green);}
+.diff-btn.d2{border-color:var(--neon2);color:var(--neon2);}
+.diff-btn.d3{border-color:var(--neon1);color:var(--neon1);}
+.diff-btn.sel,.diff-btn:hover{background:rgba(255,255,255,0.12);transform:scale(1.05);}
+.diff-btn .dico{font-size:1.6rem;display:block;}
+.diff-btn .dnm{font-size:.9rem;display:block;}
+.diff-btn .dspd{font-size:.55rem;opacity:.7;letter-spacing:1px;}
+
+.btn-play{
+  font-family:'Boogaloo',cursive;font-size:1.6rem;
+  background:var(--neon1);color:#fff;
+  border:none;border-radius:50px;
+  padding:14px 52px;cursor:pointer;
+  box-shadow:0 0 20px var(--neon1),0 6px 0 #990050;
+  transition:all .15s;letter-spacing:2px;
+  animation:pulsePlay 2s ease-in-out infinite;
+}
+@keyframes pulsePlay{0%,100%{box-shadow:0 0 20px var(--neon1),0 6px 0 #990050}50%{box-shadow:0 0 40px var(--neon1),0 6px 0 #990050}}
+.btn-play:active{transform:translateY(5px);box-shadow:0 0 20px var(--neon1),0 1px 0 #990050;}
+
+/* ===== GAME ===== */
+#gameScreen{justify-content:flex-start;gap:0;}
+
+/* HUD */
+.hud{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:4px 0 6px;
+}
+.hud-box{
+  background:rgba(0,0,0,0.5);border-radius:12px;padding:5px 12px;
+  border:1.5px solid rgba(255,255,255,0.1);min-width:80px;text-align:center;
+}
+.hud-lbl{font-size:.5rem;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,0.4);}
+.hud-val{font-family:'Boogaloo',cursive;font-size:1.4rem;color:#fff;}
+.hud-val.score-v{color:var(--neon2);text-shadow:0 0 8px var(--neon2);}
+.hud-val.timer-v{color:var(--neon3);text-shadow:0 0 8px var(--neon3);}
+.hud-val.combo-v{color:var(--neon1);text-shadow:0 0 8px var(--neon1);}
+
+/* Timer bar */
+.timer-bar-wrap{width:100%;height:8px;background:rgba(255,255,255,0.1);border-radius:50px;margin-bottom:6px;overflow:hidden;}
+.timer-bar-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--neon3),var(--green));transition:width .9s linear;box-shadow:0 0 8px var(--neon3);}
+
+/* GAME FIELD */
+.field{
+  width:100%;
+  background:linear-gradient(180deg,#1a3a0a 0%,#2a5a10 60%,var(--dirt2) 60%,var(--dirt) 100%);
+  border-radius:20px;
+  padding:12px 10px 16px;
+  box-shadow:0 0 0 3px rgba(255,255,255,0.08),0 8px 32px rgba(0,0,0,0.5);
+  position:relative;
+  overflow:hidden;
+}
+
+/* grass texture */
+.field::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:60%;
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 8%,rgba(0,0,0,0.06) 8%,rgba(0,0,0,0.06) 9%);
+  pointer-events:none;
+}
+
+/* GRID */
+.mole-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:clamp(8px,2vw,16px);
+  position:relative;z-index:2;
+}
+
+/* HOLE */
+.hole-wrap{
+  display:flex;flex-direction:column;align-items:center;
+  position:relative;
+}
+.hole-shadow{
+  width:80%;height:14px;
+  background:radial-gradient(ellipse,rgba(0,0,0,0.7) 0%,transparent 70%);
+  border-radius:50%;
+  position:absolute;bottom:0;z-index:1;
+}
+.hole-tube{
+  width:88%;
+  background:linear-gradient(180deg,var(--hole) 0%,#1a0d35 100%);
+  border-radius:50% 50% 8px 8px / 30% 30% 8px 8px;
+  border:3px solid rgba(255,255,255,0.08);
+  border-top:3px solid rgba(255,255,255,0.15);
+  position:relative;
+  overflow:hidden;
+  box-shadow:inset 0 4px 12px rgba(0,0,0,0.8),0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* MOLE inside hole */
+.mole-inner{
+  width:100%;
+  display:flex;align-items:flex-end;justify-content:center;
+  position:relative;
+  transition:height .12s cubic-bezier(.34,1.56,.64,1);
+  overflow:hidden;
+}
+.mole-face{
+  font-size:clamp(2.4rem,7vw,4rem);
+  line-height:1;
+  display:block;
+  transition:transform .1s;
+  user-select:none;
+  position:relative;z-index:2;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+/* Hole states */
+.hole-wrap.empty .hole-tube{height:clamp(38px,8vw,60px);}
+.hole-wrap.empty .mole-inner{height:0;}
+.hole-wrap.rising .hole-tube{height:clamp(60px,13vw,95px);}
+.hole-wrap.rising .mole-inner{height:clamp(38px,8vw,60px);}
+.hole-wrap.up .hole-tube{height:clamp(60px,13vw,95px);}
+.hole-wrap.up .mole-inner{height:clamp(42px,9vw,66px);}
+.hole-wrap.hit .hole-tube{height:clamp(60px,13vw,95px);}
+.hole-wrap.hit .mole-inner{height:clamp(20px,4vw,32px);}
+
+/* Neon ring on hit */
+.hole-wrap.up .hole-tube{
+  box-shadow:inset 0 4px 12px rgba(0,0,0,0.8),0 0 14px var(--neon2)44;
+}
+
+/* HIT FLASH */
+.hit-flash{
+  position:absolute;inset:0;background:rgba(255,255,255,0.6);
+  border-radius:50% 50% 8px 8px / 30% 30% 8px 8px;
+  pointer-events:none;z-index:10;
+  animation:hitFade .25s ease forwards;
+}
+@keyframes hitFade{from{opacity:1}to{opacity:0}}
+
+/* SCORE POPUP */
+.score-pop{
+  position:absolute;font-family:'Boogaloo',cursive;
+  font-size:1.5rem;pointer-events:none;z-index:100;
+  animation:scoreFly .7s ease forwards;
+  text-shadow:0 2px 6px rgba(0,0,0,0.5);
+}
+@keyframes scoreFly{0%{transform:translateY(0) scale(.8);opacity:1}100%{transform:translateY(-60px) scale(1.2);opacity:0}}
+
+/* BOMB mole */
+.hole-wrap.bomb .hole-tube{box-shadow:inset 0 4px 12px rgba(0,0,0,0.8),0 0 14px #ff444444;}
+
+/* COMBO bar */
+.combo-bar{
+  width:100%;height:6px;background:rgba(255,255,255,0.08);border-radius:50px;
+  margin:4px 0 2px;overflow:hidden;
+}
+.combo-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--neon1),var(--neon2));transition:width .2s ease;}
+
+/* ===== RESULT ===== */
+#resultScreen{justify-content:center;gap:8px;text-align:center;}
+.res-title{
+  font-family:'Boogaloo',cursive;font-size:2.8rem;color:#fff;
+  text-shadow:0 0 20px var(--neon1),0 0 40px var(--neon1);
+  animation:resPulse 1.5s ease-in-out infinite;
+}
+@keyframes resPulse{0%,100%{text-shadow:0 0 20px var(--neon1)}50%{text-shadow:0 0 40px var(--neon1),0 0 80px var(--neon1)}}
+.res-score-big{
+  font-family:'Boogaloo',cursive;font-size:5rem;
+  color:var(--neon2);text-shadow:0 0 20px var(--neon2),0 0 40px var(--neon2);
+  animation:scorePop .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes scorePop{from{transform:scale(0)}to{transform:scale(1)}}
+.res-stats{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin:4px 0;
+}
+.stat-card{
+  background:rgba(255,255,255,0.06);border-radius:14px;padding:10px;
+  border:1.5px solid rgba(255,255,255,0.1);
+}
+.stat-lbl{font-size:.55rem;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,0.4);}
+.stat-val{font-family:'Boogaloo',cursive;font-size:1.6rem;color:#fff;}
+.res-rank{font-size:3rem;animation:rankBounce .6s .3s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes rankBounce{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(5deg)}}
+.res-btns{display:flex;gap:10px;margin-top:4px;}
+.btn-lagi{font-family:'Boogaloo',cursive;font-size:1.2rem;background:var(--neon1);color:#fff;border:none;border-radius:50px;padding:12px 30px;cursor:pointer;box-shadow:0 0 16px var(--neon1),0 5px 0 #990050;transition:all .15s;}
+.btn-lagi:active{transform:translateY(4px);}
+.btn-home{font-family:'Boogaloo',cursive;font-size:1.2rem;background:transparent;color:var(--neon3);border:2px solid var(--neon3);border-radius:50px;padding:10px 22px;cursor:pointer;box-shadow:0 0 10px var(--neon3)44;}
+
+/* CONFETTI */
+#confCv{position:fixed;inset:0;pointer-events:none;z-index:500;}
+
+/* COUNTDOWN OVERLAY */
+#countdownOv{
+  position:fixed;inset:0;background:rgba(0,0,0,0.85);
+  display:flex;align-items:center;justify-content:center;
+  z-index:300;pointer-events:none;
+}
+#countdownOv.hide{display:none;}
+.cd-num{
+  font-family:'Boogaloo',cursive;font-size:10rem;color:var(--neon1);
+  text-shadow:0 0 40px var(--neon1),0 0 80px var(--neon1);
+  animation:cdPop .8s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes cdPop{0%{transform:scale(2);opacity:0}60%{transform:scale(.9);opacity:1}100%{transform:scale(1);opacity:1}}
+</style>
+</head>
+<body>
+<canvas id="confCv"></canvas>
+<div id="countdownOv" class="hide"><div class="cd-num" id="cdNum">3</div></div>
+
+<div id="app">
+
+  <!-- MENU -->
+  <div class="screen active" id="menuScreen">
+    <div class="arcade-sign">🔨 PUKUL!</div>
+    <div class="arcade-sub">WHACK - A - MOLE</div>
+    <div class="big-mole">🐹</div>
+
+    <div class="scoreboard">
+      <div class="sb-label">SKOR TERBAIK</div>
+      <div class="sb-val" id="hiScoreDisp">0</div>
+    </div>
+
+    <div style="font-size:.55rem;font-weight:800;letter-spacing:3px;color:rgba(255,255,255,0.4);margin:4px 0 6px;">PILIH KESULITAN</div>
+    <div class="diff-row">
+      <div class="diff-btn d1 sel" onclick="pickDiff('easy',this)">
+        <span class="dico">🐹</span>
+        <span class="dnm">Santai</span>
+        <span class="dspd">LAMBAT</span>
+      </div>
+      <div class="diff-btn d2" onclick="pickDiff('med',this)">
+        <span class="dico">🦔</span>
+        <span class="dnm">Seru</span>
+        <span class="dspd">SEDANG</span>
+      </div>
+      <div class="diff-btn d3" onclick="pickDiff('hard',this)">
+        <span class="dico">😈</span>
+        <span class="dnm">Gila</span>
+        <span class="dspd">NGEBUT!</span>
+      </div>
+    </div>
+    <button class="btn-play" onclick="startCountdown()">▶ MAIN!</button>
+    <div style="font-size:.6rem;color:rgba(255,255,255,0.3);margin-top:6px;font-weight:800;">TAP CEPET SEBELUM KABUR! 💨</div>
+  </div>
+
+  <!-- GAME -->
+  <div class="screen" id="gameScreen">
+    <div class="hud">
+      <div class="hud-box">
+        <div class="hud-lbl">SKOR</div>
+        <div class="hud-val score-v" id="scoreVal">0</div>
+      </div>
+      <div class="hud-box">
+        <div class="hud-lbl">LEVEL</div>
+        <div class="hud-val" style="color:var(--neon3);text-shadow:0 0 8px var(--neon3);" id="levelVal">1</div>
+      </div>
+      <div class="hud-box">
+        <div class="hud-lbl">WAKTU</div>
+        <div class="hud-val timer-v" id="timerVal">30</div>
+      </div>
+      <div class="hud-box">
+        <div class="hud-lbl">COMBO</div>
+        <div class="hud-val combo-v" id="comboVal">x1</div>
+      </div>
+    </div>
+    <div class="timer-bar-wrap">
+      <div class="timer-bar-fill" id="timerBar" style="width:100%"></div>
+    </div>
+    <div class="combo-bar"><div class="combo-fill" id="comboBar" style="width:0%"></div></div>
+    <div style="width:100%;display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+      <span style="font-size:.5rem;font-weight:800;letter-spacing:2px;color:rgba(255,100,100,.6);">MISS</span>
+      <div style="flex:1;height:5px;background:rgba(255,255,255,0.08);border-radius:50px;overflow:hidden;">
+        <div id="missBar" style="height:100%;width:0%;border-radius:50px;background:linear-gradient(90deg,#FFD700,#FF4444);transition:width .3s ease;box-shadow:0 0 6px #FF4444;"></div>
+      </div>
+      <span id="missCount" style="font-family:'Boogaloo',cursive;font-size:.75rem;color:rgba(255,100,100,.8);">0%</span>
+    </div>
+
+    <div class="field">
+      <div class="mole-grid" id="moleGrid"></div>
+    </div>
+
+    <div style="font-size:.6rem;color:rgba(255,255,255,0.25);text-align:center;margin-top:6px;font-weight:800;letter-spacing:2px;">
+      🐹 PUKUL HEWAN • 💣 JANGAN PUKUL BOM!
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="resultScreen">
+    <div class="res-rank" id="resRank">🏆</div>
+    <div class="res-title" id="resTitle">MANTAP!</div>
+    <div class="res-score-big" id="resScoreBig">0</div>
+    <div style="font-size:.6rem;font-weight:800;letter-spacing:3px;color:rgba(255,255,255,.4);">POIN</div>
+    <div class="res-stats">
+      <div class="stat-card"><div class="stat-lbl">PUKULAN</div><div class="stat-val" id="statHits">0</div></div>
+      <div class="stat-card"><div class="stat-lbl">MISS</div><div class="stat-val" id="statMiss">0</div></div>
+      <div class="stat-card"><div class="stat-lbl">COMBO MAX</div><div class="stat-val" id="statCombo">0</div></div>
+      <div class="stat-card"><div class="stat-lbl">BOM KENA</div><div class="stat-val" id="statBomb">0</div></div>
+      <div class="stat-card" style="grid-column:1/-1"><div class="stat-lbl">LEVEL DICAPAI</div><div class="stat-val" id="statLevel" style="color:var(--neon3)">Lv 1</div></div>
+    </div>
+    <div class="res-btns">
+      <button class="btn-lagi" onclick="startCountdown()">🔄 LAGI!</button>
+      <button class="btn-home" onclick="showMenu()">🏠 MENU</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// =============================================
+// CONFIG
+// =============================================
+// Tiap level punya config sendiri — makin tinggi makin gila
+// upTime: berapa lama mole muncul (ms), interval: seberapa sering spawn (ms)
+// maxActive: max mole aktif sekaligus
+const LEVELS = [
+  // Lv 1
+  {upTime:1500, interval:1000, bombChance:.06, maxActive:1},
+  // Lv 2
+  {upTime:1300, interval:850,  bombChance:.08, maxActive:1},
+  // Lv 3
+  {upTime:1100, interval:700,  bombChance:.10, maxActive:2},
+  // Lv 4
+  {upTime:950,  interval:600,  bombChance:.12, maxActive:2},
+  // Lv 5
+  {upTime:800,  interval:500,  bombChance:.15, maxActive:3},
+  // Lv 6
+  {upTime:700,  interval:420,  bombChance:.18, maxActive:3},
+  // Lv 7
+  {upTime:600,  interval:350,  bombChance:.20, maxActive:4},
+  // Lv 8
+  {upTime:500,  interval:280,  bombChance:.22, maxActive:4},
+];
+const DIFF_START = {easy:1, med:3, hard:5}; // level mulai per kesulitan (1-based)
+const TIME_PER_LEVEL = 30;
+
+const MOLES = ['🐹','🐭','🐿️','🦔','🐰','🐱','🐶'];
+const BOMBS = ['💣','💥'];
+const HOLES = 9;
+
+// =============================================
+// STATE
+// =============================================
+let diff='easy', hiScore=0;
+let score=0, timeLeft=TIME_PER_LEVEL, combo=1, maxCombo=1, hits=0, misses=0, bombHits=0;
+let currentLevel=1;
+let levelMoles=0, levelMisses=0; // tracking per level untuk cek 50%
+let holes=[], moleTimers=[], spawnTimer=null, gameTimer=null;
+let gameRunning=false;
+
+// =============================================
+// AUDIO
+// =============================================
+let _ac=null;
+function getAC(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume();return _ac;}
+function beep(f,d,t,v,dl){
+  try{const a=getAC(),o=a.createOscillator(),g=a.createGain();
+  o.connect(g);g.connect(a.destination);o.type=t||'sine';
+  o.frequency.setValueAtTime(f,a.currentTime+(dl||0));
+  g.gain.setValueAtTime(v||.3,a.currentTime+(dl||0));
+  g.gain.exponentialRampToValueAtTime(.001,a.currentTime+(dl||0)+d);
+  o.start(a.currentTime+(dl||0));o.stop(a.currentTime+(dl||0)+d+.05);}catch(e){}
+}
+function sndWhack(){beep(300,.06,'square',.4);beep(180,.1,'sawtooth',.25,.04);}
+function sndCombo(){beep(523,.08,'triangle',.3,0);beep(659,.08,'triangle',.3,.07);beep(784,.1,'triangle',.35,.14);}
+function sndBomb(){beep(150,.3,'sawtooth',.5,0);beep(100,.3,'sawtooth',.4,.05);beep(80,.4,'sawtooth',.3,.1);}
+function sndMiss(){beep(250,.12,'square',.15);}
+function sndTick(){beep(880,.04,'square',.1);}
+function sndWin(){[523,659,784,1047,1319].forEach((f,i)=>beep(f,.3,'triangle',.28,i*.08));}
+
+// =============================================
+// MENU
+// =============================================
+function pickDiff(d,el){
+  diff=d;
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// =============================================
+// COUNTDOWN
+// =============================================
+function startCountdown(){
+  clearInterval(spawnTimer); clearInterval(gameTimer);
+  moleTimers.forEach(t=>clearTimeout(t));
+  gameRunning=false;
+  showScreen('gameScreen');
+  buildGrid();
+  const ov=document.getElementById('countdownOv');
+  const cdEl=document.getElementById('cdNum');
+  ov.classList.remove('hide');
+  let n=3;
+  cdEl.textContent=n;
+  beep(440,.1,'triangle',.4);
+  const t=setInterval(()=>{
+    n--;
+    if(n<=0){
+      clearInterval(t);
+      cdEl.textContent='GO!';
+      cdEl.style.color='var(--green)';
+      cdEl.style.textShadow='0 0 40px var(--green),0 0 80px var(--green)';
+      beep(880,.2,'triangle',.5);
+      setTimeout(()=>{ov.classList.add('hide');cdEl.style.color='var(--neon1)';cdEl.style.textShadow='';startGame();},700);
+    } else {
+      cdEl.textContent=n;
+      cdEl.style.animation='none'; cdEl.offsetHeight; cdEl.style.animation='cdPop .8s cubic-bezier(.34,1.56,.64,1)';
+      beep(440,.1,'triangle',.4);
+    }
+  },900);
+}
+
+// =============================================
+// BUILD GRID
+// =============================================
+function buildGrid(){
+  const grid=document.getElementById('moleGrid');
+  grid.innerHTML='';
+  holes=[];
+  moleTimers=[];
+  for(let i=0;i<HOLES;i++){
+    const wrap=document.createElement('div');
+    wrap.className='hole-wrap empty';
+    wrap.innerHTML=`
+      <div class="hole-tube">
+        <div class="mole-inner">
+          <span class="mole-face" id="mface${i}"></span>
+        </div>
+      </div>
+      <div class="hole-shadow"></div>`;
+    wrap.addEventListener('touchstart',e=>{e.preventDefault();whack(i);},{passive:false});
+    wrap.addEventListener('click',()=>whack(i)); // click untuk desktop; touchstart sudah preventDefault jadi tidak double-fire
+    grid.appendChild(wrap);
+    holes.push({el:wrap, state:'empty', isBomb:false});
+    moleTimers.push(null);
+  }
+}
+
+// =============================================
+// GAME LOOP
+// =============================================
+function getLevelCfg(){ return LEVELS[Math.min(currentLevel-1, LEVELS.length-1)]; }
+
+function startGame(){
+  currentLevel = DIFF_START[diff];
+  score=0; timeLeft=TIME_PER_LEVEL; combo=0; maxCombo=1; hits=0; misses=0; bombHits=0;
+  levelMoles=0; levelMisses=0;
+  document.getElementById('missBar').style.width='0%';
+  document.getElementById('missCount').textContent='0%';
+  gameRunning=true;
+  updateHUD();
+  startLevelTimer();
+  startSpawnLoop();
+}
+
+function startLevelTimer(){
+  // Reset timer bar
+  document.getElementById('timerBar').style.transition='none';
+  document.getElementById('timerBar').style.width='100%';
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      document.getElementById('timerBar').style.transition=`width ${TIME_PER_LEVEL}s linear`;
+      document.getElementById('timerBar').style.width='0%';
+    });
+  });
+
+  clearInterval(gameTimer);
+  timeLeft=TIME_PER_LEVEL;
+  document.getElementById('timerVal').textContent=timeLeft;
+  gameTimer=setInterval(()=>{
+    timeLeft--;
+    document.getElementById('timerVal').textContent=timeLeft;
+    if(timeLeft<=5) sndTick();
+    if(timeLeft<=0){
+      clearInterval(gameTimer);
+      clearInterval(spawnTimer);
+      gameRunning=false;
+      setTimeout(levelUp,400);
+    }
+  },1000);
+}
+
+function startSpawnLoop(){
+  clearInterval(spawnTimer);
+  const cfg=getLevelCfg();
+  spawnTimer=setInterval(()=>{
+    if(!gameRunning) return;
+    // Spawn sampai maxActive mole aktif sekaligus
+    const active=holes.filter(h=>h.state==='up'||h.state==='rising').length;
+    if(active < cfg.maxActive) spawnMole();
+  }, cfg.interval);
+}
+
+function levelUp(){
+  holes.forEach((_,i)=>retract(i));
+  const maxLv = LEVELS.length;
+  if(currentLevel >= maxLv){
+    // Sudah level maks — game over, menang!
+    setTimeout(endGame, 300);
+    return;
+  }
+  currentLevel++;
+  updateHUD();
+  // Tampilkan overlay level baru
+  showLevelBanner(currentLevel, ()=>{
+    levelMoles=0; levelMisses=0;
+    document.getElementById('missBar').style.width='0%';
+    document.getElementById('missCount').textContent='0%';
+    gameRunning=true;
+    startLevelTimer();
+    startSpawnLoop();
+  });
+}
+
+function levelFail(){
+  holes.forEach((_,i)=>retract(i));
+  // Tampilkan overlay gagal
+  const ov=document.getElementById('countdownOv');
+  const cdEl=document.getElementById('cdNum');
+  ov.classList.remove('hide');
+  cdEl.style.color='var(--neon1)';
+  cdEl.style.textShadow='0 0 40px var(--neon1),0 0 80px var(--neon1)';
+  cdEl.style.fontSize='3.5rem';
+  const pct=Math.round(levelMisses/levelMoles*100);
+  cdEl.innerHTML=`GAGAL!<br><span style="font-size:1.4rem;color:#fff">Miss ${pct}% di Level ${currentLevel}</span><br><span style="font-size:1.1rem;color:rgba(255,255,255,.5)">Harus di bawah 50%</span>`;
+  beep(300,.3,'sawtooth',.4); beep(200,.4,'sawtooth',.3,.2);
+  setTimeout(()=>{
+    ov.classList.add('hide');
+    cdEl.style.fontSize=''; cdEl.innerHTML='';
+    cdEl.style.color='var(--neon1)'; cdEl.style.textShadow='';
+    endGame();
+  }, 2000);
+}
+
+function showLevelBanner(lv, cb){
+  const ov=document.getElementById('countdownOv');
+  const cdEl=document.getElementById('cdNum');
+  const cfg=getLevelCfg();
+  const maxA=cfg.maxActive;
+  ov.classList.remove('hide');
+  cdEl.style.color='var(--neon2)';
+  cdEl.style.textShadow='0 0 40px var(--neon2),0 0 80px var(--neon2)';
+  cdEl.style.fontSize='4rem';
+  cdEl.innerHTML=`LEVEL ${lv}<br><span style="font-size:1.8rem;color:var(--neon3)">${maxA} mole sekaligus! 🔥</span>`;
+  beep(880,.15,'triangle',.5); beep(1047,.2,'triangle',.4,.15);
+  setTimeout(()=>{
+    ov.classList.add('hide');
+    cdEl.style.fontSize='';
+    cdEl.innerHTML='';
+    cb();
+  }, 1800);
+}
+
+function spawnMole(){
+  if(!gameRunning) return;
+  // Find empty holes
+  const empty=holes.map((h,i)=>i).filter(i=>holes[i].state==='empty');
+  if(empty.length===0) return;
+  const idx=empty[Math.floor(Math.random()*empty.length)];
+  const cfg=getLevelCfg();
+  const isBomb=Math.random()<cfg.bombChance;
+  const face=isBomb? BOMBS[Math.floor(Math.random()*BOMBS.length)] : MOLES[Math.floor(Math.random()*MOLES.length)];
+  if(!isBomb) levelMoles++; // hitung total mole (bukan bom) yang muncul
+
+  const h=holes[idx];
+  h.state='rising';
+  h.isBomb=isBomb;
+  document.getElementById('mface'+idx).textContent=face;
+  h.el.className='hole-wrap rising'+(isBomb?' bomb':'');
+
+  setTimeout(()=>{
+    if(h.state==='rising'){h.state='up';h.el.className='hole-wrap up'+(isBomb?' bomb':'');}
+  },80);
+
+  // Auto-hide after upTime
+  moleTimers[idx]=setTimeout(()=>{
+    if(h.state==='up'){
+      // missed!
+      if(!isBomb){
+        misses++;
+        levelMisses++;
+        combo=1;
+        document.getElementById('comboVal').textContent='x1';
+        document.getElementById('comboBar').style.width='0%';
+        sndMiss();
+        updateMissBar();
+        // Cek 50% — minimal 4 mole dulu baru bisa gagal (biar tidak langsung game over di awal)
+        if(levelMoles>=4 && levelMisses/levelMoles > 0.5){
+          clearInterval(gameTimer); clearInterval(spawnTimer);
+          gameRunning=false;
+          setTimeout(levelFail, 400);
+          retract(idx);
+          return;
+        }
+      }
+      retract(idx);
+    }
+  }, cfg.upTime);
+}
+
+function retract(idx){
+  const h=holes[idx];
+  h.state='empty';
+  h.el.className='hole-wrap empty';
+  document.getElementById('mface'+idx).textContent='';
+  clearTimeout(moleTimers[idx]);
+}
+
+// =============================================
+// WHACK
+// =============================================
+function whack(idx){
+  if(!gameRunning) return;
+  const h=holes[idx];
+  if(h.state!=='up') return;
+  clearTimeout(moleTimers[idx]);
+
+  const face=document.getElementById('mface'+idx).textContent;
+
+  // Hit flash
+  const flash=document.createElement('div');
+  flash.className='hit-flash';
+  h.el.querySelector('.hole-tube').appendChild(flash);
+  setTimeout(()=>flash.remove(),300);
+
+  if(h.isBomb){
+    // BOMB HIT
+    sndBomb();
+    bombHits++;
+    combo=1;
+    document.getElementById('comboVal').textContent='x1';
+    document.getElementById('comboBar').style.width='0%';
+    score=Math.max(0,score-200);
+    showScorePop(h.el,'-200','#FF6B6B');
+    // Screen shake
+    document.getElementById('app').style.animation='none';
+    document.getElementById('app').offsetHeight;
+    document.getElementById('app').style.animation='shake .3s ease';
+  } else {
+    // GOOD HIT
+    sndWhack();
+    hits++;
+    combo++;  // increment dulu baru hitung poin
+    if(combo>maxCombo) maxCombo=combo;
+    const pts=100*combo;
+    score+=pts;
+    if(combo>1) sndCombo();
+    document.getElementById('comboVal').textContent='x'+combo;
+    const comboPct=Math.min(100,(combo-1)*10);
+    document.getElementById('comboBar').style.width=comboPct+'%';
+    showScorePop(h.el,'+'+pts, combo>=3?'var(--neon1)':'var(--neon2)');
+    // Star burst on high combo
+    if(combo>=5) starBurst(h.el);
+  }
+
+  h.state='hit';
+  h.el.className='hole-wrap hit';
+  updateHUD();
+  setTimeout(()=>retract(idx),150);
+}
+
+function updateHUD(){
+  document.getElementById('scoreVal').textContent=score;
+  document.getElementById('levelVal').textContent=currentLevel;
+}
+
+function updateMissBar(){
+  if(levelMoles===0) return;
+  const pct=Math.round(levelMisses/levelMoles*100);
+  document.getElementById('missBar').style.width=pct+'%';
+  document.getElementById('missCount').textContent=pct+'%';
+  // Warna makin merah kalau mendekati 50%
+  const danger = pct>=40;
+  document.getElementById('missCount').style.color = danger ? '#FF4444' : 'rgba(255,100,100,.8)';
+  if(danger) document.getElementById('missCount').style.textShadow='0 0 8px #FF4444';
+  else document.getElementById('missCount').style.textShadow='';
+}
+
+function showScorePop(el, text, color){
+  const rect=el.getBoundingClientRect();
+  const p=document.createElement('div');
+  p.className='score-pop';
+  p.textContent=text;
+  p.style.color=color;
+  p.style.left=(rect.left+rect.width/2-20)+'px';
+  p.style.top=(rect.top)+'px';
+  document.body.appendChild(p);
+  setTimeout(()=>p.remove(),750);
+}
+
+function starBurst(el){
+  const rect=el.getBoundingClientRect();
+  ['⭐','✨','💫'].forEach((s,i)=>{
+    const d=document.createElement('div');
+    d.style.cssText=`position:fixed;font-size:1.4rem;left:${rect.left+rect.width/2+( i-1)*24}px;top:${rect.top-10}px;pointer-events:none;z-index:150;animation:scoreFly .7s ease forwards;`;
+    d.textContent=s;
+    document.body.appendChild(d);
+    setTimeout(()=>d.remove(),800);
+  });
+}
+
+// =============================================
+// END GAME
+// =============================================
+function endGame(){
+  // Retract all moles
+  holes.forEach((_,i)=>retract(i));
+  if(score>hiScore){ hiScore=score; document.getElementById('hiScoreDisp').textContent=hiScore; }
+
+  const total=hits+misses;
+  const acc=total>0?Math.round(hits/total*100):0;
+
+  let rank,title;
+  if(currentLevel>=LEVELS.length){rank='👑';title='TAMAT! GILA!';}
+  else if(score>=2000){rank='🏆';title='JUARA!';}
+  else if(score>=1200){rank='🥇';title='MANTAP!';}
+  else if(score>=600){rank='🥈';title='BAGUS!';}
+  else{rank='🥉';title='TERUS SEMANGAT!';}
+
+  document.getElementById('resRank').textContent=rank;
+  document.getElementById('resTitle').textContent=title;
+  document.getElementById('resScoreBig').textContent=score;
+  document.getElementById('statHits').textContent=hits;
+  document.getElementById('statMiss').textContent=misses;
+  document.getElementById('statCombo').textContent='x'+maxCombo;
+  document.getElementById('statBomb').textContent=bombHits;
+  document.getElementById('statLevel').textContent='Lv '+currentLevel;
+
+  if(score>=2000){ sndWin(); launchConfetti(); }
+  else sndWhack();
+
+  showScreen('resultScreen');
+}
+
+// =============================================
+// CONFETTI
+// =============================================
+const ccv=document.getElementById('confCv');
+const cctx=ccv.getContext('2d');
+let cp=[],cr=null;
+function launchConfetti(){
+  ccv.width=window.innerWidth;ccv.height=window.innerHeight;
+  cp=[];
+  const cols=['#FF3CAC','#FFD93D','#4ECDC4','#FF6B35','#39FF14','#C77DFF'];
+  for(let i=0;i<140;i++) cp.push({x:Math.random()*ccv.width,y:-20,vx:(Math.random()-.5)*7,vy:2+Math.random()*5,r:4+Math.random()*7,col:cols[i%cols.length],rot:Math.random()*360,rv:(Math.random()-.5)*12});
+  cancelAnimationFrame(cr); animCf();
+  setTimeout(()=>{cancelAnimationFrame(cr);cctx.clearRect(0,0,ccv.width,ccv.height);},5000);
+}
+function animCf(){
+  cctx.clearRect(0,0,ccv.width,ccv.height);
+  cp.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.rot+=p.rv;cctx.save();cctx.translate(p.x,p.y);cctx.rotate(p.rot*Math.PI/180);cctx.fillStyle=p.col;cctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);cctx.restore();});
+  cp=cp.filter(p=>p.y<ccv.height+30);
+  if(cp.length>0) cr=requestAnimationFrame(animCf);
+}
+
+// Screen shake keyframes via JS
+const shakeStyle=document.createElement('style');
+shakeStyle.textContent='@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}';
+document.head.appendChild(shakeStyle);
+
+// =============================================
+// SCREENS
+// =============================================
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showMenu(){
+  clearInterval(spawnTimer);clearInterval(gameTimer);
+  holes.forEach((_,i)=>retract(i));
+  gameRunning=false;
+  showScreen('menuScreen');
+}
+
+document.addEventListener('touchstart',()=>{try{getAC();}catch(e){}},{once:false});
+</script>
+</body>
+</html>

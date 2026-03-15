@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🎉 Kuis Anak Cerdas!</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0221;
+  --card:#ffffff0e;
+  --gold:#FFD700;
+  --green:#00E676;
+  --red:#FF1744;
+  --blue:#00B0FF;
+  --purple:#E040FB;
+  --orange:#FF6D00;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100vh;font-family:'Nunito',sans-serif;background:var(--bg);color:#fff;overflow-x:hidden;}
+
+/* animated bg */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 10%,rgba(224,64,251,.2) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 50% at 80% 80%,rgba(0,176,255,.15) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 50%,rgba(255,109,0,.08) 0%,transparent 70%);
+  animation:bgShift 8s ease-in-out infinite alternate;
+}
+@keyframes bgShift{
+  0%{opacity:.7}100%{opacity:1}
+}
+
+/* stars */
+.star{position:fixed;pointer-events:none;z-index:0;font-size:.7rem;
+  animation:starTwinkle linear infinite;}
+@keyframes starTwinkle{
+  0%,100%{opacity:.1;transform:scale(.8)}
+  50%{opacity:.5;transform:scale(1.2)}
+}
+
+/* ── WRAPPER ── */
+#app{
+  position:relative;z-index:1;
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:16px;
+}
+
+/* ── SCREENS ── */
+.screen{width:100%;max-width:480px;animation:scrIn .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes scrIn{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+/* ── CARD ── */
+.card{
+  background:rgba(255,255,255,.07);
+  border:1.5px solid rgba(255,255,255,.12);
+  border-radius:28px;
+  padding:28px 22px;
+  backdrop-filter:blur(12px);
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+
+/* ── LOGO ── */
+.logo-wrap{text-align:center;margin-bottom:20px;}
+.logo-emoji{font-size:3.5rem;display:block;animation:logoFloat 2s ease-in-out infinite;}
+@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.logo-title{
+  font-family:'Fredoka One',cursive;
+  font-size:2.2rem;letter-spacing:2px;
+  background:linear-gradient(135deg,#FFD700,#FF6D00,#FF3CAC);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 12px rgba(255,165,0,.4));
+  line-height:1.1;
+}
+.logo-sub{font-size:.65rem;font-weight:800;letter-spacing:4px;color:rgba(255,255,255,.35);margin-top:4px;}
+
+/* ── FORM ── */
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:.65rem;font-weight:800;letter-spacing:3px;color:rgba(255,255,255,.4);margin-bottom:6px;}
+.field input{
+  width:100%;padding:12px 16px;
+  background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);
+  border-radius:14px;color:#fff;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:700;
+  outline:none;transition:border-color .2s;
+}
+.field input:focus{border-color:rgba(255,215,0,.5);}
+.field input::placeholder{color:rgba(255,255,255,.25);}
+
+/* ── BUTTONS ── */
+.btn{
+  width:100%;padding:14px;border:none;border-radius:50px;
+  font-family:'Fredoka One',cursive;font-size:1.2rem;letter-spacing:1px;
+  cursor:pointer;transition:all .15s;display:block;
+}
+.btn:active{transform:scale(.96);}
+.btn-primary{
+  background:linear-gradient(135deg,#FF6D00,#FF3CAC);color:#fff;
+  box-shadow:0 6px 24px rgba(255,109,0,.4);margin-top:6px;
+}
+.btn-primary:hover{box-shadow:0 8px 28px rgba(255,109,0,.6);}
+.btn-sound{
+  background:rgba(224,64,251,.2);border:1.5px solid rgba(224,64,251,.4);
+  color:#E040FB;font-family:'Nunito',sans-serif;font-weight:800;
+  font-size:.85rem;padding:9px;border-radius:50px;margin-bottom:16px;
+}
+
+/* age selector */
+.age-row{display:flex;gap:8px;flex-wrap:wrap;}
+.age-btn{
+  flex:1;min-width:40px;padding:10px 6px;
+  background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);
+  border-radius:12px;color:rgba(255,255,255,.5);font-family:'Fredoka One',cursive;
+  font-size:1.1rem;cursor:pointer;transition:all .15s;text-align:center;
+}
+.age-btn.sel{
+  background:rgba(255,215,0,.2);border-color:#FFD700;color:#FFD700;
+  box-shadow:0 0 12px rgba(255,215,0,.3);
+}
+
+/* ── LEVEL LADDER ── */
+.ladder{display:flex;flex-direction:column;gap:4px;margin-bottom:18px;}
+.ladder-row{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 12px;border-radius:12px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+  transition:all .3s;
+}
+.ladder-row.active{
+  background:rgba(255,215,0,.12);border-color:rgba(255,215,0,.4);
+  box-shadow:0 0 16px rgba(255,215,0,.2);
+}
+.ladder-row.done{background:rgba(0,230,118,.08);border-color:rgba(0,230,118,.3);}
+.ladder-num{font-family:'Fredoka One',cursive;font-size:.8rem;width:20px;
+  color:rgba(255,255,255,.3);}
+.ladder-row.active .ladder-num{color:#FFD700;}
+.ladder-row.done .ladder-num{color:#00E676;}
+.ladder-label{font-size:.75rem;font-weight:800;flex:1;color:rgba(255,255,255,.4);}
+.ladder-row.active .ladder-label{color:#fff;}
+.ladder-row.done .ladder-label{color:#00E676;}
+.ladder-prize{font-family:'Fredoka One',cursive;font-size:.85rem;color:rgba(255,255,255,.25);}
+.ladder-row.active .ladder-prize{color:#FFD700;}
+.ladder-row.done .ladder-prize{color:#00E676;}
+.ladder-ico{font-size:.9rem;}
+
+/* ── QUIZ SCREEN ── */
+.quiz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.q-level{
+  font-family:'Fredoka One',cursive;font-size:1rem;letter-spacing:1px;
+  background:rgba(255,215,0,.15);border:1.5px solid rgba(255,215,0,.3);
+  border-radius:50px;padding:4px 16px;color:#FFD700;
+}
+.q-prize{
+  font-family:'Fredoka One',cursive;font-size:1rem;
+  color:#00E676;text-shadow:0 0 10px rgba(0,230,118,.4);
+}
+
+/* timer ring */
+.timer-wrap{display:flex;justify-content:center;margin-bottom:14px;position:relative;}
+.timer-ring{transform:rotate(-90deg);}
+.timer-ring-bg{fill:none;stroke:rgba(255,255,255,.1);stroke-width:5;}
+.timer-ring-fill{fill:none;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .9s linear,stroke .5s;}
+.timer-num{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-family:'Fredoka One',cursive;font-size:2rem;
+  transition:color .3s;
+}
+
+/* question */
+.q-cat{font-size:.55rem;font-weight:800;letter-spacing:3px;color:rgba(255,255,255,.3);margin-bottom:8px;text-align:center;}
+.q-text{
+  font-size:1.25rem;font-weight:800;line-height:1.4;text-align:center;
+  margin-bottom:18px;color:#fff;
+}
+
+/* answer buttons */
+.answers{display:flex;flex-direction:column;gap:8px;}
+.ans-btn{
+  padding:13px 16px;
+  background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.14);
+  border-radius:16px;color:#fff;font-family:'Nunito',sans-serif;font-weight:800;font-size:.95rem;
+  cursor:pointer;text-align:left;transition:all .15s;display:flex;align-items:center;gap:10px;
+}
+.ans-btn:hover:not(:disabled){background:rgba(255,255,255,.14);border-color:rgba(255,215,0,.5);transform:scale(1.02);}
+.ans-btn:active:not(:disabled){transform:scale(.97);}
+.ans-btn.correct{background:rgba(0,230,118,.2);border-color:#00E676;color:#00E676;box-shadow:0 0 20px rgba(0,230,118,.3);}
+.ans-btn.wrong{background:rgba(255,23,68,.15);border-color:#FF1744;color:#FF5252;}
+.ans-btn:disabled{cursor:not-allowed;}
+.ans-label{
+  width:28px;height:28px;border-radius:8px;
+  background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;
+  font-family:'Fredoka One',cursive;font-size:.85rem;flex-shrink:0;
+}
+.ans-btn.correct .ans-label{background:rgba(0,230,118,.3);}
+.ans-btn.wrong .ans-label{background:rgba(255,23,68,.3);}
+
+/* lifelines */
+.lifelines{display:flex;gap:8px;justify-content:center;margin-bottom:14px;}
+.ll-btn{
+  padding:7px 14px;border-radius:50px;
+  background:rgba(0,176,255,.15);border:1.5px solid rgba(0,176,255,.3);
+  color:#00B0FF;font-family:'Nunito',sans-serif;font-weight:800;font-size:.75rem;
+  cursor:pointer;transition:all .15s;
+}
+.ll-btn:hover:not(:disabled){background:rgba(0,176,255,.3);}
+.ll-btn:disabled{opacity:.3;cursor:not-allowed;filter:grayscale(1);}
+
+/* ── RESULT FEEDBACK ── */
+.feedback{
+  text-align:center;padding:14px;border-radius:16px;margin-bottom:12px;
+  animation:fdIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes fdIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.feedback.correct{background:rgba(0,230,118,.1);border:1.5px solid rgba(0,230,118,.3);}
+.feedback.wrong{background:rgba(255,23,68,.1);border:1.5px solid rgba(255,23,68,.3);}
+.feedback-ico{font-size:2.5rem;display:block;margin-bottom:4px;}
+.feedback-title{font-family:'Fredoka One',cursive;font-size:1.5rem;}
+.feedback.correct .feedback-title{color:#00E676;}
+.feedback.wrong .feedback-title{color:#FF5252;}
+.feedback-sub{font-size:.8rem;font-weight:700;color:rgba(255,255,255,.5);margin-top:4px;}
+
+/* ── FINISH SCREEN ── */
+.finish-hero{font-size:4rem;display:block;text-align:center;animation:heroSpin 1s cubic-bezier(.34,1.56,.64,1);}
+@keyframes heroSpin{from{transform:rotate(-20deg) scale(0)}to{transform:rotate(0) scale(1)}}
+.finish-name{font-family:'Fredoka One',cursive;font-size:2rem;text-align:center;
+  background:linear-gradient(135deg,#FFD700,#FF6D00);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:6px 0;}
+.finish-total{
+  text-align:center;margin:16px 0;padding:16px;
+  background:rgba(255,215,0,.1);border:2px solid rgba(255,215,0,.3);border-radius:20px;
+}
+.ft-lbl{font-size:.55rem;font-weight:800;letter-spacing:3px;color:rgba(255,255,255,.35);}
+.ft-val{font-family:'Fredoka One',cursive;font-size:2.8rem;color:#FFD700;text-shadow:0 0 20px rgba(255,215,0,.5);}
+.ft-sub{font-size:.8rem;font-weight:700;color:rgba(255,255,255,.4);}
+
+.result-breakdown{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.rb-row{display:flex;align-items:center;gap:8px;padding:7px 10px;
+  background:rgba(255,255,255,.04);border-radius:10px;}
+.rb-ico{font-size:1.1rem;}
+.rb-label{font-size:.75rem;font-weight:800;flex:1;color:rgba(255,255,255,.5);}
+.rb-val{font-family:'Fredoka One',cursive;font-size:.95rem;color:#FFD700;}
+.rb-val.green{color:#00E676;}
+
+/* ── CONFETTI ── */
+#confCv{position:fixed;inset:0;pointer-events:none;z-index:50;}
+
+/* ── SHAKE ── */
+.shake{animation:shk .4s ease;}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+
+/* ── PROGRESS BAR ── */
+.prog-wrap{height:5px;background:rgba(255,255,255,.08);border-radius:5px;margin-bottom:16px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#FF6D00,#FFD700);transition:width .5s ease;}
+
+/* safe haven badge */
+.safe-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);
+  border-radius:50px;padding:3px 10px;font-size:.6rem;font-weight:800;letter-spacing:2px;color:#00E676;
+  margin-bottom:10px;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="screen" class="screen"></div>
+</div>
+<canvas id="confCv"></canvas>
+
+<script>
+// =============================================
+// STARS BG
+// =============================================
+for(let i=0;i<30;i++){
+  const s=document.createElement('div');
+  s.className='star';s.textContent='⭐';
+  s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;font-size:${.4+Math.random()*.5}rem;animation-duration:${2+Math.random()*3}s;animation-delay:${-Math.random()*3}s;`;
+  document.body.appendChild(s);
+}
+
+// =============================================
+// AUDIO
+// =============================================
+let _ac=null,soundOn=false;
+function ac(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume();return _ac;}
+function beep(f,d,t,v,dl){try{const a=ac(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type=t||'sine';o.frequency.setValueAtTime(f,a.currentTime+(dl||0));g.gain.setValueAtTime(v||.3,a.currentTime+(dl||0));g.gain.exponentialRampToValueAtTime(.001,a.currentTime+(dl||0)+d);o.start(a.currentTime+(dl||0));o.stop(a.currentTime+(dl||0)+d+.05);}catch(e){}}
+function enableSound(){
+  try{ac();soundOn=true;beep(600,.1,'sine',.3);}catch(e){}
+  document.querySelector('.btn-sound')?.remove();
+}
+function sndCorrect(){beep(523,.1,'triangle',.4);beep(659,.1,'triangle',.35,.1);beep(784,.15,'triangle',.4,.18);beep(1047,.2,'triangle',.45,.3);}
+function sndWrong(){beep(300,.15,'sawtooth',.4);beep(180,.3,'sawtooth',.35,.1);}
+function sndTick(){beep(880,.04,'square',.1);}
+function sndTickUrgent(){beep(1100,.05,'square',.2);}
+function sndWin(){[523,659,784,1047,1319].forEach((f,i)=>beep(f,.15,'triangle',.4,i*.12));}
+function sndBonus(){[784,1047,1319,1568,2093].forEach((f,i)=>beep(f,.12,'triangle',.5,i*.09));}
+function sndLevelUp(){beep(659,.08,'triangle',.3);beep(784,.08,'triangle',.3,.1);beep(1047,.2,'sine',.5,.2);}
+
+// =============================================
+// TTS
+// =============================================
+function speak(text,rate=1.05,cb=null){
+  if(!soundOn){cb&&cb();return;}
+  window.speechSynthesis?.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='id-ID';u.rate=rate;
+  u.onend=()=>cb&&cb();
+  window.speechSynthesis?.speak(u);
+}
+function verbal(q){return q.replace(/\+/g,' tambah ').replace(/-/g,' kurang ').replace(/x/g,' kali ').replace(/:/g,' bagi ');}
+function terbilang(n){
+  const s=['','satu','dua','tiga','empat','lima','enam','tujuh','delapan','sembilan'];
+  if(n<10)return s[n];
+  if(n<20)return n===10?'sepuluh':n===11?'sebelas':s[n-10]+' belas';
+  if(n<100)return s[Math.floor(n/10)]+' puluh '+terbilang(n%10);
+  if(n<200)return 'seratus '+terbilang(n-100);
+  if(n<1000)return s[Math.floor(n/100)]+' ratus '+terbilang(n%100);
+  if(n<2000)return 'seribu '+terbilang(n-1000);
+  if(n<1000000)return terbilang(Math.floor(n/1000))+' ribu '+terbilang(n%1000);
+  return '';
+}
+
+// =============================================
+// LEVELS
+// =============================================
+const LEVELS=[
+  {num:1, label:'Pemanasan',    prize:500,   safe:false, color:'#69F0AE', emoji:'🌱'},
+  {num:2, label:'Mudah',        prize:1000,  safe:false, color:'#40C4FF', emoji:'😊'},
+  {num:3, label:'Lumayan',      prize:2000,  safe:true,  color:'#FFD740', emoji:'🤔'},
+  {num:4, label:'Seru!',        prize:5000,  safe:false, color:'#FF6D00', emoji:'🔥'},
+  {num:5, label:'Menantang',    prize:10000, safe:true,  color:'#FF3CAC', emoji:'💪'},
+  {num:6, label:'Super Susah',  prize:20000, safe:false, color:'#E040FB', emoji:'🤯'},
+  {num:7, label:'BONUS MASTER', prize:50000, safe:false, color:'#FFD700', emoji:'👑'},
+];
+
+// =============================================
+// QUESTION BANK
+// =============================================
+const QUESTIONS = [
+  // ── MATEMATIKA ──
+  {q:'1 + 2 = ?',         opts:['3','4','5'],              a:'3',    cat:'🔢 Matematika', min:4,max:6},
+  {q:'3 + 4 = ?',         opts:['6','7','8'],              a:'7',    cat:'🔢 Matematika', min:4,max:6},
+  {q:'5 - 3 = ?',         opts:['2','1','3'],              a:'2',    cat:'🔢 Matematika', min:4,max:6},
+  {q:'10 - 4 = ?',        opts:['4','5','6'],              a:'6',    cat:'🔢 Matematika', min:4,max:6},
+  {q:'9 - 5 = ?',         opts:['4','5','6'],              a:'4',    cat:'🔢 Matematika', min:4,max:6},
+  {q:'7 + 8 = ?',         opts:['14','15','16'],           a:'15',   cat:'🔢 Matematika', min:5,max:7},
+  {q:'12 + 13 = ?',       opts:['24','25','26'],           a:'25',   cat:'🔢 Matematika', min:6,max:8},
+  {q:'3 x 4 = ?',         opts:['12','7','9'],             a:'12',   cat:'🔢 Matematika', min:7,max:10},
+  {q:'4 x 5 = ?',         opts:['20','25','30'],           a:'20',   cat:'🔢 Matematika', min:7,max:10},
+  {q:'6 x 7 = ?',         opts:['42','48','36'],           a:'42',   cat:'🔢 Matematika', min:8,max:10},
+  {q:'20 ÷ 5 = ?',        opts:['4','5','6'],              a:'4',    cat:'🔢 Matematika', min:7,max:10},
+  {q:'48 ÷ 6 = ?',        opts:['8','6','7'],              a:'8',    cat:'🔢 Matematika', min:8,max:10},
+  {q:'25 x 4 = ?',        opts:['100','90','80'],          a:'100',  cat:'🔢 Matematika', min:8,max:10},
+  {q:'100 ÷ 4 = ?',       opts:['25','20','30'],           a:'25',   cat:'🔢 Matematika', min:9,max:10},
+  {q:'Berapa nilai dari 5²?', opts:['25','10','15'],        a:'25',   cat:'🔢 Matematika', min:9,max:10},
+  {q:'Berapa nilai dari ½ + ¼?', opts:['¾','½','1'],       a:'¾',    cat:'🔢 Matematika', min:9,max:10},
+
+  // ── SAINS ──
+  {q:'Hewan yang bisa terbang?',           opts:['Kucing','Burung','Ikan'],             a:'Burung',     cat:'🔬 Sains', min:4,max:6},
+  {q:'Matahari terbit dari arah mana?',    opts:['Barat','Timur','Utara'],              a:'Timur',      cat:'🔬 Sains', min:4,max:10},
+  {q:'Es batu di bawah matahari jadi?',    opts:['Hilang','Air','Uap'],                 a:'Air',        cat:'🔬 Sains', min:4,max:7},
+  {q:'Apa nama planet tempat kita tinggal?', opts:['Mars','Jupiter','Bumi'],            a:'Bumi',       cat:'🔬 Sains', min:5,max:10},
+  {q:'Planet terdekat dengan Matahari?',   opts:['Venus','Mars','Merkurius'],           a:'Merkurius',  cat:'🔬 Sains', min:8,max:10},
+  {q:'Apa yang dibutuhkan tanaman untuk tumbuh?', opts:['Es','Sinar matahari','Batu'], a:'Sinar matahari', cat:'🔬 Sains', min:5,max:7},
+  {q:'Hewan berapa kaki laba-laba?',       opts:['6','8','4'],                          a:'8',          cat:'🔬 Sains', min:6,max:8},
+  {q:'Proses ulat menjadi kupu-kupu disebut?', opts:['Metamorfosis','Fotosintesis','Evolusi'], a:'Metamorfosis', cat:'🔬 Sains', min:8,max:10},
+  {q:'Apa nama samudra terbesar?',         opts:['Atlantik','Pasifik','Hindia'],        a:'Pasifik',    cat:'🔬 Sains', min:9,max:10},
+  {q:'Gas apa yang kita hirup dari udara?', opts:['Karbon dioksida','Oksigen','Nitrogen'], a:'Oksigen', cat:'🔬 Sains', min:7,max:10},
+  {q:'Warna apa dari biru + kuning?',      opts:['Merah','Hijau','Ungu'],               a:'Hijau',      cat:'🔬 Sains', min:6,max:9},
+  {q:'Apa yang membuat pelangi?',          opts:['Angin','Hujan dan matahari','Awan'],  a:'Hujan dan matahari', cat:'🔬 Sains', min:6,max:8},
+  {q:'Berapa hari dalam 1 tahun?',         opts:['365','300','200'],                    a:'365',        cat:'🔬 Sains', min:7,max:10},
+  {q:'Magnet menarik benda dari?',         opts:['Kayu','Besi','Plastik'],              a:'Besi',       cat:'🔬 Sains', min:7,max:9},
+
+  // ── PENGETAHUAN UMUM ──
+  {q:'Warna bendera Indonesia?',           opts:['Merah Putih','Putih Biru','Hijau Kuning'], a:'Merah Putih', cat:'🌍 Umum', min:4,max:10},
+  {q:'1 minggu ada berapa hari?',          opts:['5','7','10'],                         a:'7',          cat:'🌍 Umum', min:4,max:7},
+  {q:'Berapa jumlah jari kedua tangan?',   opts:['5','10','8'],                         a:'10',         cat:'🌍 Umum', min:4,max:6},
+  {q:'Ibu kota Indonesia?',                opts:['Surabaya','Bandung','Jakarta'],        a:'Jakarta',    cat:'🌍 Umum', min:6,max:10},
+  {q:'Ibu kota Jepang?',                   opts:['Seoul','Beijing','Tokyo'],             a:'Tokyo',      cat:'🌍 Umum', min:8,max:10},
+  {q:'Negara punya piramida besar?',       opts:['Mesir','Italia','Cina'],              a:'Mesir',      cat:'🌍 Umum', min:7,max:9},
+  {q:'Benua terbesar di dunia?',           opts:['Afrika','Eropa','Asia'],              a:'Asia',       cat:'🌍 Umum', min:8,max:10},
+  {q:'Ada berapa benua di dunia?',         opts:['5','6','7'],                          a:'7',          cat:'🌍 Umum', min:8,max:10},
+  {q:'Bahasa nasional Indonesia?',         opts:['Bahasa Jawa','Bahasa Inggris','Bahasa Indonesia'], a:'Bahasa Indonesia', cat:'🌍 Umum', min:6,max:10},
+  {q:'Presiden Indonesia saat ini?',       opts:['Joko Widodo','Prabowo','Anies'],      a:'Prabowo',    cat:'🌍 Umum', min:7,max:10},
+  {q:'Negara paling besar di dunia?',      opts:['Amerika','China','Rusia'],            a:'Rusia',      cat:'🌍 Umum', min:9,max:10},
+  {q:'Negara dengan penduduk terbanyak?',  opts:['India','China','Amerika'],            a:'India',      cat:'🌍 Umum', min:9,max:10},
+  {q:'Gunung tertinggi di dunia?',         opts:['Everest','Kilimanjaro','Fuji'],       a:'Everest',    cat:'🌍 Umum', min:8,max:10},
+  {q:'Sungai terpanjang di dunia?',        opts:['Amazon','Nil','Yangtze'],             a:'Nil',        cat:'🌍 Umum', min:9,max:10},
+  {q:'Tempat olahraga renang disebut?',    opts:['Lapangan','Kolam renang','Stadion'],  a:'Kolam renang', cat:'🌍 Umum', min:4,max:6},
+
+  // ── HEWAN & ALAM ──
+  {q:'Bunyi yang dihasilkan kucing?',      opts:['Meong','Guk','Moo'],                  a:'Meong',      cat:'🐾 Hewan', min:4,max:6},
+  {q:'Buah yang monyet suka?',             opts:['Apel','Pisang','Jeruk'],              a:'Pisang',     cat:'🐾 Hewan', min:4,max:6},
+  {q:'Hewan lehernya sangat panjang?',     opts:['Zebra','Gajah','Jerapah'],            a:'Jerapah',    cat:'🐾 Hewan', min:4,max:7},
+  {q:'Hewan yang hidupnya di air?',        opts:['Kucing','Ikan','Ayam'],               a:'Ikan',       cat:'🐾 Hewan', min:4,max:6},
+  {q:'Hewan yang dianggap paling setia?',  opts:['Kucing','Anjing','Ikan'],             a:'Anjing',     cat:'🐾 Hewan', min:6,max:9},
+  {q:'Hewan paling besar di darat?',       opts:['Badak','Jerapah','Gajah'],            a:'Gajah',      cat:'🐾 Hewan', min:6,max:9},
+  {q:'Burung yang tidak bisa terbang?',    opts:['Elang','Penguin','Merak'],            a:'Penguin',    cat:'🐾 Hewan', min:6,max:9},
+  {q:'Buah berwarna merah dan rasanya asam manis?', opts:['Semangka','Stroberi','Mangga'], a:'Stroberi', cat:'🐾 Hewan', min:5,max:7},
+  {q:'Binatang yang mengeluarkan tinta?',  opts:['Ikan','Gurita','Kepiting'],           a:'Gurita',     cat:'🐾 Hewan', min:7,max:9},
+  {q:'Hewan apa yang tidur selama musim dingin?', opts:['Anjing','Beruang','Kucing'],   a:'Beruang',    cat:'🐾 Hewan', min:7,max:9},
+
+  // ── BAHASA INDONESIA ──
+  {q:'Apa arti kata "dermawan"?',          opts:['Pelit','Suka memberi','Pemalas'],     a:'Suka memberi', cat:'📚 Bahasa', min:7,max:10},
+  {q:'Antonim dari "rajin" adalah?',       opts:['Pintar','Cerdas','Malas'],            a:'Malas',      cat:'📚 Bahasa', min:6,max:9},
+  {q:'Sinonim dari "bahagia" adalah?',     opts:['Sedih','Senang','Marah'],             a:'Senang',     cat:'📚 Bahasa', min:6,max:9},
+  {q:'Huruf vokal adalah?',                opts:['b,c,d,f','a,i,u,e,o','p,q,r,s'],     a:'a,i,u,e,o',  cat:'📚 Bahasa', min:5,max:7},
+  {q:'Apa itu "pantun"?',                  opts:['Cerita panjang','Puisi rakyat 4 baris','Lagu daerah'], a:'Puisi rakyat 4 baris', cat:'📚 Bahasa', min:8,max:10},
+
+  // ── BAHASA INGGRIS ──
+  {q:'What color is the sky?',             opts:['Green','Blue','Red'],                 a:'Blue',       cat:'🇬🇧 English', min:7,max:10},
+  {q:'How many legs does a dog have?',     opts:['Two','Four','Six'],                   a:'Four',       cat:'🇬🇧 English', min:7,max:10},
+  {q:'Which animal says "Moo"?',           opts:['Cat','Cow','Dog'],                    a:'Cow',        cat:'🇬🇧 English', min:7,max:10},
+  {q:'What planet is the "Red Planet"?',   opts:['Earth','Mars','Jupiter'],             a:'Mars',       cat:'🇬🇧 English', min:8,max:10},
+  {q:'What is "apple" in Indonesian?',     opts:['Jeruk','Mangga','Apel'],              a:'Apel',       cat:'🇬🇧 English', min:6,max:8},
+  {q:'What is "kucing" in English?',       opts:['Dog','Cat','Bird'],                   a:'Cat',        cat:'🇬🇧 English', min:6,max:8},
+  {q:'"Good morning" in Indonesian?',      opts:['Selamat malam','Selamat pagi','Selamat siang'], a:'Selamat pagi', cat:'🇬🇧 English', min:5,max:8},
+  {q:'What is 5 + 3 in English?',         opts:['Seven','Eight','Nine'],               a:'Eight',      cat:'🇬🇧 English', min:7,max:9},
+
+  // ── KEHIDUPAN SEHARI-HARI ──
+  {q:'Alat untuk menulis di buku?',        opts:['Pensil','Gunting','Sapu'],            a:'Pensil',     cat:'🏠 Sehari-hari', min:4,max:6},
+  {q:'Yang melindungi dari hujan?',        opts:['Sepatu','Payung','Jaket'],            a:'Payung',     cat:'🏠 Sehari-hari', min:4,max:7},
+  {q:'Kapan kita melihat bintang?',        opts:['Pagi hari','Siang hari','Malam hari'], a:'Malam hari', cat:'🏠 Sehari-hari', min:4,max:6},
+  {q:'Kita makan dengan?',                 opts:['Tangan atau sendok','Palu','Gunting'], a:'Tangan atau sendok', cat:'🏠 Sehari-hari', min:4,max:5},
+  {q:'Kita minum air menggunakan?',        opts:['Piring','Gelas','Mangkuk'],           a:'Gelas',      cat:'🏠 Sehari-hari', min:4,max:5},
+  {q:'Lampu lalu lintas hijau artinya?',   opts:['Berhenti','Jalan','Hati-hati'],       a:'Jalan',      cat:'🏠 Sehari-hari', min:5,max:8},
+  {q:'Kita tidur di?',                     opts:['Meja','Kursi','Tempat tidur'],        a:'Tempat tidur', cat:'🏠 Sehari-hari', min:4,max:5},
+  {q:'Alat untuk mengukur suhu badan?',    opts:['Penggaris','Termometer','Timbangan'], a:'Termometer', cat:'🏠 Sehari-hari', min:6,max:9},
+
+  // ── KREATIVITAS / TEBAK-TEBAKAN ──
+  {q:'Apa yang bisa naik tapi tidak bisa turun?', opts:['Roket','Usia','Harga'],        a:'Usia',       cat:'🧩 Tebak-tebakan', min:7,max:10},
+  {q:'Makin besar makin ringan... itu apa?', opts:['Batu','Gelembung udara','Air'],      a:'Gelembung udara', cat:'🧩 Tebak-tebakan', min:7,max:10},
+  {q:'Ada kaki tapi tak bisa jalan... itu apa?', opts:['Meja','Anjing','Kucing'],       a:'Meja',       cat:'🧩 Tebak-tebakan', min:6,max:9},
+  {q:'Aku selalu mengikutimu tapi tidak bisa kamu pegang. Aku adalah?', opts:['Bayangan','Angin','Air'], a:'Bayangan', cat:'🧩 Tebak-tebakan', min:7,max:10},
+
+  // ── MUSIK & SENI ──
+  {q:'Alat musik yang dipetik?',           opts:['Drum','Gitar','Terompet'],            a:'Gitar',      cat:'🎵 Musik & Seni', min:5,max:9},
+  {q:'Alat musik yang dipukul?',           opts:['Seruling','Biola','Drum'],            a:'Drum',       cat:'🎵 Musik & Seni', min:5,max:8},
+  {q:'Penyanyi terkenal dari Indonesia?',  opts:['BTS','Raisa','Blackpink'],            a:'Raisa',      cat:'🎵 Musik & Seni', min:7,max:10},
+  {q:'Lagu kebangsaan Indonesia?',         opts:['Garuda Pancasila','Indonesia Raya','Rayuan Pulau Kelapa'], a:'Indonesia Raya', cat:'🎵 Musik & Seni', min:6,max:10},
+
+
+  // ── REMAJA & DEWASA (12-25) ──
+  {q:'Apa kepanjangan dari DNA?',            opts:['Deoxyribonucleic Acid','Dynamic Nucleic Agent','Digital Nucleus Array'], a:'Deoxyribonucleic Acid', cat:'🔬 Sains', min:14,max:25},
+  {q:'Siapa yang menemukan teori gravitasi?', opts:['Albert Einstein','Isaac Newton','Galileo Galilei'], a:'Isaac Newton', cat:'🔬 Sains', min:12,max:25},
+  {q:'Berapakah nilai Pi (π)?',              opts:['3.14','2.71','1.62'],                a:'3.14',      cat:'🔢 Matematika', min:12,max:25},
+  {q:'Rumus luas lingkaran?',                opts:['πr²','2πr','πd'],                   a:'πr²',       cat:'🔢 Matematika', min:12,max:25},
+  {q:'Berapa nilai akar dari 144?',          opts:['11','12','13'],                      a:'12',        cat:'🔢 Matematika', min:12,max:25},
+  {q:'Apa itu fotosintesis?',                opts:['Respirasi hewan','Proses tumbuhan membuat makanan dari sinar matahari','Cara jamur berkembang biak'], a:'Proses tumbuhan membuat makanan dari sinar matahari', cat:'🔬 Sains', min:12,max:25},
+  {q:'Gas rumah kaca yang paling banyak?',   opts:['Oksigen','Karbon dioksida','Nitrogen'], a:'Karbon dioksida', cat:'🔬 Sains', min:13,max:25},
+  {q:'Apa yang dipelajari dalam ilmu Astronomi?', opts:['Benda-benda langit','Batuan bumi','Ekosistem laut'], a:'Benda-benda langit', cat:'🔬 Sains', min:12,max:25},
+  {q:'Apa itu inflasi?',                     opts:['Turunnya harga barang','Naiknya harga barang secara umum','Naiknya nilai mata uang'], a:'Naiknya harga barang secara umum', cat:'💼 Ekonomi', min:15,max:25},
+  {q:'Apa kepanjangan dari GDP?',            opts:['Gross Domestic Product','General Data Protocol','Global Development Plan'], a:'Gross Domestic Product', cat:'💼 Ekonomi', min:16,max:25},
+  {q:'Siapa penulis novel Laskar Pelangi?',  opts:['Pramoedya Ananta Toer','Andrea Hirata','Dee Lestari'], a:'Andrea Hirata', cat:'📚 Bahasa', min:12,max:25},
+  {q:'Apa nama penyakit kekurangan vitamin C?', opts:['Rabun jauh','Skorbut','Anemia'], a:'Skorbut',   cat:'🔬 Sains', min:13,max:25},
+  {q:'Siapa presiden Amerika Serikat ke-1?', opts:['Abraham Lincoln','George Washington','Thomas Jefferson'], a:'George Washington', cat:'🌍 Umum', min:13,max:25},
+  {q:'Tahun berapakah Indonesia merdeka?',   opts:['1942','1945','1949'],                a:'1945',      cat:'🌍 Umum', min:11,max:25},
+  {q:'Siapa yang menulis lagu Indonesia Raya?', opts:['Ismail Marzuki','W.R. Supratman','Gesang'], a:'W.R. Supratman', cat:'🌍 Umum', min:11,max:25},
+  {q:'Apa nama pahlawan wanita dari Aceh?',  opts:['R.A. Kartini','Cut Nyak Dien','Dewi Sartika'], a:'Cut Nyak Dien', cat:'🌍 Umum', min:11,max:25},
+  {q:'Berapa jumlah provinsi di Indonesia?', opts:['34','37','38'],                      a:'38',        cat:'🌍 Umum', min:13,max:25},
+  {q:'Apa nama badan legislatif Indonesia?', opts:['DPR','MPR','Presiden'],              a:'DPR',       cat:'🌍 Umum', min:14,max:25},
+  {q:'Apa nama ibukota baru Indonesia?',     opts:['Palangkaraya','Nusantara','Samarinda'], a:'Nusantara', cat:'🌍 Umum', min:12,max:25},
+  {q:'Apa itu hukum Newton I?',              opts:['Aksi = Reaksi','Benda diam tetap diam jika tidak ada gaya','F = m × a'], a:'Benda diam tetap diam jika tidak ada gaya', cat:'🔬 Sains', min:14,max:25},
+  {q:'Siapa ilmuwan yang menemukan teori relativitas?', opts:['Newton','Einstein','Hawking'], a:'Einstein', cat:'🔬 Sains', min:13,max:25},
+  {q:'Apa itu pH netral?',                   opts:['7','0','14'],                        a:'7',         cat:'🔬 Sains', min:14,max:25},
+  {q:'Mata uang Jepang?',                    opts:['Yuan','Won','Yen'],                  a:'Yen',       cat:'🌍 Umum', min:12,max:25},
+  {q:'Mata uang Eropa (kebanyakan)?',        opts:['Pound','Euro','Franc'],              a:'Euro',      cat:'🌍 Umum', min:13,max:25},
+  {q:'Apa kepanjangan RAM dalam komputer?',  opts:['Random Access Memory','Read All Memory','Remote Access Module'], a:'Random Access Memory', cat:'💻 Teknologi', min:13,max:25},
+  {q:'Siapa pendiri Microsoft?',             opts:['Steve Jobs','Bill Gates','Elon Musk'], a:'Bill Gates', cat:'💻 Teknologi', min:13,max:25},
+  {q:'Apa nama aplikasi pesan buatan Indonesia yang populer?', opts:['WhatsApp','Line','Telegram'], a:'Line', cat:'💻 Teknologi', min:12,max:25},
+  {q:'HTML adalah singkatan dari?',          opts:['HyperText Markup Language','High Text Making Language','Home Tool Markup Language'], a:'HyperText Markup Language', cat:'💻 Teknologi', min:14,max:25},
+  {q:'Siapa CEO Tesla saat ini?',            opts:['Bill Gates','Jeff Bezos','Elon Musk'], a:'Elon Musk', cat:'💻 Teknologi', min:14,max:25},
+  {q:'Apa itu saham?',                       opts:['Utang perusahaan','Tanda kepemilikan sebagian perusahaan','Tabungan di bank'], a:'Tanda kepemilikan sebagian perusahaan', cat:'💼 Ekonomi', min:16,max:25},
+  {q:'Apa nama indeks saham Indonesia?',     opts:['Dow Jones','IHSG','Nikkei'],         a:'IHSG',      cat:'💼 Ekonomi', min:16,max:25},
+  {q:'Siapa pengarang buku Rich Dad Poor Dad?', opts:['Warren Buffett','Robert Kiyosaki','Benjamin Graham'], a:'Robert Kiyosaki', cat:'💼 Ekonomi', min:17,max:25},
+  {q:'Apa itu UMR?',                         opts:['Upah Minimum Regional','Unit Mata uang Resmi','Ukuran Modal Rata-rata'], a:'Upah Minimum Regional', cat:'💼 Ekonomi', min:16,max:25},
+  {q:'Film superhero terlaris sepanjang masa?', opts:['Avengers Endgame','Spider-Man','Batman'], a:'Avengers Endgame', cat:'🎬 Hiburan', min:13,max:25},
+  {q:'Siapa penyanyi lagu Shape of You?',    opts:['Justin Bieber','Ed Sheeran','Bruno Mars'], a:'Ed Sheeran', cat:'🎵 Musik & Seni', min:13,max:25},
+  {q:'Apa nama karakter utama di game Minecraft?', opts:['Steve','Alex','Creeper'],      a:'Steve',     cat:'🎮 Gaming', min:12,max:25},
+  {q:'Battle royale game yang populer di Indonesia?', opts:['Dota 2','PUBG Mobile','League of Legends'], a:'PUBG Mobile', cat:'🎮 Gaming', min:13,max:25},
+  {q:'Apa nama platform streaming musik terpopuler?', opts:['SoundCloud','Spotify','Deezer'], a:'Spotify', cat:'💻 Teknologi', min:13,max:25},
+  {q:'Berapa kalori yang dibutuhkan orang dewasa per hari?', opts:['1000-1500','1500-2000','2000-2500'], a:'2000-2500', cat:'🏥 Kesehatan', min:15,max:25},
+  {q:'Apa itu BMI?',                         opts:['Body Mass Index','Basic Medical Information','Blood Measure Index'], a:'Body Mass Index', cat:'🏥 Kesehatan', min:15,max:25},
+  {q:'Vitamin D bisa didapat dari?',         opts:['Buah-buahan','Sinar matahari','Daging merah'], a:'Sinar matahari', cat:'🏥 Kesehatan', min:14,max:25},
+  {q:'Berapa lama idealnya tidur orang dewasa?', opts:['4-5 jam','6-7 jam','7-9 jam'],   a:'7-9 jam',   cat:'🏥 Kesehatan', min:15,max:25},
+
+  // ── OLAHRAGA ──
+  {q:'Olahraga lempar bola ke ring?',      opts:['Sepak bola','Basket','Voli'],         a:'Basket',     cat:'⚽ Olahraga', min:5,max:9},
+  {q:'Olahraga yang menggunakan raket?',   opts:['Sepak bola','Badminton','Renang'],    a:'Badminton',  cat:'⚽ Olahraga', min:5,max:9},
+  {q:'Berapa pemain dalam 1 tim sepak bola?', opts:['10','11','12'],                    a:'11',         cat:'⚽ Olahraga', min:6,max:10},
+  {q:'Olahraga lari jarak jauh disebut?',  opts:['Sprint','Maraton','Estafet'],         a:'Maraton',    cat:'⚽ Olahraga', min:8,max:10},
+];
+
+// =============================================
+// STATE
+// =============================================
+let playerName='', playerAge=4, currentLevel=0, totalMoney=0;
+let usedQuestions=[], currentQ=null;
+let timerInterval=null, timeLeft=15;
+let lifeline50=true, lifelineCall=true;
+let correctCount=0, safeHavenMoney=0;
+let rolling=false;
+
+// =============================================
+// CONFETTI
+// =============================================
+const ccv=document.getElementById('confCv');
+const cctx=ccv.getContext('2d');
+let cp=[],cr=null;
+function launchConf(){
+  ccv.width=window.innerWidth;ccv.height=window.innerHeight;cp=[];
+  const cols=['#FFD700','#FF3CAC','#00E676','#00B0FF','#FF6D00','#E040FB','#fff'];
+  for(let i=0;i<160;i++) cp.push({x:Math.random()*ccv.width,y:-30,vx:(Math.random()-.5)*7,vy:2+Math.random()*6,r:3+Math.random()*7,col:cols[i%cols.length],rot:Math.random()*360,rv:(Math.random()-.5)*12});
+  cancelAnimationFrame(cr);animC();
+  setTimeout(()=>{cancelAnimationFrame(cr);cctx.clearRect(0,0,ccv.width,ccv.height);},5000);
+}
+function animC(){
+  cctx.clearRect(0,0,ccv.width,ccv.height);
+  cp.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.rot+=p.rv;cctx.save();cctx.translate(p.x,p.y);cctx.rotate(p.rot*Math.PI/180);cctx.fillStyle=p.col;cctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);cctx.restore();});
+  cp=cp.filter(p=>p.y<ccv.height+30);
+  if(cp.length>0) cr=requestAnimationFrame(animC);
+}
+
+// =============================================
+// RENDER
+// =============================================
+function render(html){
+  const s=document.getElementById('screen');
+  s.innerHTML=`<div class="card">${html}</div>`;
+}
+
+// =============================================
+// SCREENS
+// =============================================
+function showStart(){
+  render(`
+    <button class="btn btn-sound" onclick="enableSound()">🔊 Aktifkan Suara Dulu</button>
+    <div class="logo-wrap">
+      <span class="logo-emoji">🏆</span>
+      <div class="logo-title">KUIS ANAK<br>CERDAS!</div>
+      <div class="logo-sub">SIAPA YANG PALING PINTAR?</div>
+    </div>
+    <div class="field">
+      <label>NAMA KAMU</label>
+      <input id="nameInp" placeholder="Masukkan namamu..." maxlength="20">
+    </div>
+    <div class="field">
+      <label>UMUR</label>
+      <div class="age-row" id="ageRow">
+        ${[4,5,6,7,8,9,10,12,15,17,20,25].map((a,idx)=>`<div class="age-btn${idx===0?' sel':''}" onclick="pickAge(${a},this)">${a}</div>`).join('')}
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="startGame()">🚀 MULAI KUIS!</button>
+  `);
+  playerAge=4;
+}
+
+function pickAge(a,el){
+  playerAge=a;
+  document.querySelectorAll('.age-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function startGame(){
+  playerName=document.getElementById('nameInp')?.value.trim()||'';
+  if(!playerName){
+    document.getElementById('nameInp').style.borderColor='#FF1744';
+    document.getElementById('nameInp').placeholder='Tulis namamu dulu ya!';
+    return;
+  }
+  currentLevel=0; totalMoney=0; usedQuestions=[];
+  lifeline50=true; lifelineCall=true; correctCount=0; safeHavenMoney=0;
+  showLadder();
+}
+
+function showLadder(){
+  const ladderHTML = LEVELS.map((l,i)=>{
+    let cls='';
+    if(i===currentLevel) cls='active';
+    else if(i<currentLevel) cls='done';
+    return `<div class="ladder-row ${cls}">
+      <div class="ladder-num">${i<currentLevel?'✅':i===currentLevel?'▶':l.num}</div>
+      <div>
+        <div class="ladder-label">${l.emoji} ${l.label}</div>
+        ${l.safe?'<span class="safe-badge">🛡️ AMAN</span>':''}
+      </div>
+      <div class="ladder-prize">Rp ${l.prize.toLocaleString('id')}</div>
+    </div>`;
+  }).reverse().join('');
+
+  render(`
+    <div style="text-align:center;margin-bottom:12px;">
+      <div style="font-family:'Fredoka One',cursive;font-size:1.4rem;color:#FFD700;">Halo, ${playerName}! 👋</div>
+      <div style="font-size:.7rem;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.35);margin-top:2px;">UMUR ${playerAge} TAHUN</div>
+    </div>
+    <div class="ladder">${ladderHTML}</div>
+    <button class="btn btn-primary" onclick="loadQuestion()">▶ ${currentLevel===0?'MULAI!':'LANJUT!'}</button>
+  `);
+}
+
+// =============================================
+// QUESTION
+// =============================================
+function loadQuestion(){
+  const lvl=LEVELS[currentLevel];
+  const avail=QUESTIONS.filter(q=>playerAge>=q.min&&playerAge<=q.max&&!usedQuestions.includes(q.q));
+  if(avail.length===0){ finishGame(true); return; }
+  currentQ=avail[Math.floor(Math.random()*avail.length)];
+  usedQuestions.push(currentQ.q);
+  timeLeft=currentLevel>=4?12:15;
+  showQuestion();
+}
+
+function showQuestion(){
+  const lvl=LEVELS[currentLevel];
+  const prog=((currentLevel)/LEVELS.length)*100;
+  const labels=['A','B','C','D'];
+  const opts=currentQ.opts.map((o,i)=>`
+    <button class="ans-btn" id="ans${i}" data-idx="${i}" onclick="answerByIndex(${i})">
+      <span class="ans-label">${labels[i]}</span>${o}
+    </button>`).join('');
+
+  render(`
+    <div class="prog-wrap"><div class="prog-fill" style="width:${prog}%"></div></div>
+    <div class="quiz-header">
+      <div class="q-level" style="color:${lvl.color};border-color:${lvl.color}44;background:${lvl.color}18">
+        ${lvl.emoji} Level ${lvl.num}
+      </div>
+      <div class="q-prize" style="color:${lvl.color}">Rp ${lvl.prize.toLocaleString('id')}</div>
+    </div>
+    <div class="timer-wrap">
+      <svg class="timer-ring" width="70" height="70" viewBox="0 0 70 70">
+        <circle class="timer-ring-bg" cx="35" cy="35" r="30"/>
+        <circle class="timer-ring-fill" id="timerRing" cx="35" cy="35" r="30"
+          stroke="${lvl.color}"
+          stroke-dasharray="${2*Math.PI*30}"
+          stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-num" id="timerNum" style="color:${lvl.color}">${timeLeft}</div>
+    </div>
+    <div class="q-cat">${currentQ.cat}</div>
+    <div class="q-text">${currentQ.q}</div>
+    <div class="lifelines">
+      <button class="ll-btn" id="ll50" onclick="useLifeline50()" ${!lifeline50?'disabled':''}>
+        ${lifeline50?'🎯 50:50':'🎯 Terpakai'}
+      </button>
+      <button class="ll-btn" id="llCall" onclick="useLifelineCall()" ${!lifelineCall?'disabled':''}>
+        ${lifelineCall?'📞 Telepon':'📞 Terpakai'}
+      </button>
+    </div>
+    <div class="answers">${opts}</div>
+  `);
+
+  startTimer();
+  if(soundOn) speak(verbal(currentQ.q),1.05);
+}
+
+// =============================================
+// TIMER
+// =============================================
+function startTimer(){
+  clearInterval(timerInterval);
+  const total=timeLeft;
+  const circ=2*Math.PI*30;
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    const el=document.getElementById('timerNum');
+    const ring=document.getElementById('timerRing');
+    if(el) el.textContent=timeLeft;
+    if(ring) ring.style.strokeDashoffset=circ*(1-(timeLeft/total));
+    if(timeLeft<=5){
+      if(el) el.style.color='#FF1744';
+      if(ring) ring.style.stroke='#FF1744';
+      sndTickUrgent();
+    } else {
+      sndTick();
+    }
+    if(timeLeft<=0){
+      clearInterval(timerInterval);
+      timeOutAnswer();
+    }
+  },1000);
+}
+
+function timeOutAnswer(){
+  disableAnswers();
+  // Show correct answer
+  currentQ.opts.forEach((o,i)=>{
+    if(o===currentQ.a) document.getElementById('ans'+i)?.classList.add('correct');
+  });
+  sndWrong();
+  setTimeout(()=>showFeedback(false,true),400);
+}
+
+// =============================================
+// ANSWER
+// =============================================
+function answerByIndex(i){
+  if(!currentQ) return;
+  answer(currentQ.opts[i]);
+}
+function answer(val){
+  clearInterval(timerInterval);
+  disableAnswers();
+  const isCorrect=(val===currentQ.a);
+
+  // Highlight
+  currentQ.opts.forEach((o,i)=>{
+    const btn=document.getElementById('ans'+i);
+    if(!btn) return;
+    if(o===currentQ.a) btn.classList.add('correct');
+    else if(o===val&&!isCorrect) btn.classList.add('wrong');
+  });
+
+  if(isCorrect){
+    sndCorrect();
+    setTimeout(()=>showFeedback(true,false),500);
+  } else {
+    sndWrong();
+    setTimeout(()=>showFeedback(false,false),500);
+  }
+}
+
+function disableAnswers(){
+  document.querySelectorAll('.ans-btn').forEach(b=>b.disabled=true);
+  document.getElementById('ll50')?.setAttribute('disabled',true);
+  document.getElementById('llCall')?.setAttribute('disabled',true);
+}
+
+function showFeedback(correct, timeout){
+  const lvl=LEVELS[currentLevel];
+  if(correct){
+    totalMoney+=lvl.prize;
+    correctCount++;
+    if(lvl.safe) safeHavenMoney=totalMoney;
+    sndLevelUp();
+    render(`
+      <div class="feedback correct">
+        <span class="feedback-ico">🎉</span>
+        <div class="feedback-title">BETUL!</div>
+        <div class="feedback-sub">+Rp ${lvl.prize.toLocaleString('id')} • Total: Rp ${totalMoney.toLocaleString('id')}</div>
+      </div>
+      <div style="text-align:center;font-size:.85rem;font-weight:800;color:rgba(255,255,255,.5);margin-bottom:10px;">
+        Jawaban: <span style="color:#00E676">${currentQ.a}</span>
+      </div>
+      <button class="btn btn-primary" onclick="nextLevel()">${currentLevel>=LEVELS.length-1?'🏆 LIHAT HASIL':'▶ LEVEL BERIKUTNYA'}</button>
+    `);
+  } else {
+    // Use safe haven money
+    const keep=safeHavenMoney;
+    render(`
+      <div class="feedback wrong">
+        <span class="feedback-ico">${timeout?'⏰':'😢'}</span>
+        <div class="feedback-title">${timeout?'WAKTU HABIS!':'SALAH!'}</div>
+        <div class="feedback-sub">Jawaban: <span style="color:#FF5252">${currentQ.a}</span></div>
+      </div>
+      ${keep>0?`<div style="text-align:center;font-size:.8rem;font-weight:800;color:#00E676;margin-bottom:10px;">
+        🛡️ Kamu dapat uang aman: Rp ${keep.toLocaleString('id')}</div>`:''}
+      <button class="btn btn-primary" onclick="finishGame(false)">📊 Lihat Hasil</button>
+    `);
+    const card=document.querySelector('.card');
+    card?.classList.add('shake');
+    setTimeout(()=>card?.classList.remove('shake'),400);
+  }
+}
+
+// =============================================
+// LIFELINES
+// =============================================
+function useLifeline50(){
+  if(!lifeline50||!currentQ) return;
+  lifeline50=false;
+  document.getElementById('ll50').disabled=true;
+  document.getElementById('ll50').textContent='🎯 Terpakai';
+
+  // Remove 2 wrong answers
+  let removed=0;
+  currentQ.opts.forEach((o,i)=>{
+    if(o!==currentQ.a&&removed<2){
+      const btn=document.getElementById('ans'+i);
+      if(btn&&!btn.disabled){
+        btn.style.opacity='0.2';
+        btn.disabled=true;
+        removed++;
+      }
+    }
+  });
+  beep(660,.1,'triangle',.3);
+}
+
+function useLifelineCall(){
+  if(!lifelineCall||!currentQ) return;
+  lifelineCall=false;
+  document.getElementById('llCall').disabled=true;
+  document.getElementById('llCall').textContent='📞 Terpakai';
+
+  // Flash the correct answer
+  const idx=currentQ.opts.indexOf(currentQ.a);
+  const btn=document.getElementById('ans'+idx);
+  if(btn){
+    let flash=0;
+    const iv=setInterval(()=>{
+      btn.style.background=flash%2===0?'rgba(255,215,0,.3)':'';
+      flash++;
+      if(flash>5) clearInterval(iv);
+    },200);
+  }
+  speak(`Menurutku jawabannya adalah ${currentQ.a}`,1);
+}
+
+// =============================================
+// LEVEL PROGRESS
+// =============================================
+function nextLevel(){
+  currentLevel++;
+  if(currentLevel>=LEVELS.length){ finishGame(true); return; }
+  showLadder();
+}
+
+// =============================================
+// FINISH
+// =============================================
+function finishGame(completed){
+  clearInterval(timerInterval);
+  const finalMoney=completed?totalMoney:safeHavenMoney;
+
+  if(finalMoney>0||completed){
+    launchConf();
+    sndWin();
+    if(completed) sndBonus();
+  }
+
+  const rankStr=correctCount>=6?'🏆 JUARA!':correctCount>=4?'⭐ HEBAT!':correctCount>=2?'👍 BAGUS!':'💪 TERUS BELAJAR!';
+
+  render(`
+    <span class="finish-hero">${completed?'🏆':'🎯'}</span>
+    <div class="finish-name">SELAMAT, ${playerName.toUpperCase()}!</div>
+    ${completed?'<div style="text-align:center;font-size:1rem;font-weight:800;color:#FFD700;margin-bottom:8px;">🎊 KAMU MENYELESAIKAN SEMUA LEVEL!</div>':''}
+    <div class="finish-total">
+      <div class="ft-lbl">TOTAL HADIAH</div>
+      <div class="ft-val">Rp ${finalMoney.toLocaleString('id')}</div>
+      <div class="ft-sub">${terbilang(finalMoney)} rupiah</div>
+    </div>
+    <div class="result-breakdown">
+      <div class="rb-row"><span class="rb-ico">✅</span><span class="rb-label">Jawaban Benar</span><span class="rb-val green">${correctCount} / ${usedQuestions.length}</span></div>
+      <div class="rb-row"><span class="rb-ico">📊</span><span class="rb-label">Level Tercapai</span><span class="rb-val">${currentLevel} / ${LEVELS.length}</span></div>
+      <div class="rb-row"><span class="rb-ico">⭐</span><span class="rb-label">Predikat</span><span class="rb-val">${rankStr}</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="showStart()">🔄 Main Lagi</button>
+  `);
+
+  speak(`Selamat ${playerName}! Kamu hebat! Total hadiah kamu adalah ${terbilang(finalMoney)} rupiah. ${rankStr}`,0.95);
+}
+
+// =============================================
+// INIT
+// =============================================
+showStart();
+window.addEventListener('touchstart',()=>{try{ac();}catch(e){}},{once:false,passive:true});
+</script>
+</body>
+</html>

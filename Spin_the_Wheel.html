@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🎡 Spin the Wheel!</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0118;
+  --gold:#FFD700;
+  --red:#FF1744;
+  --green:#00E676;
+  --blue:#00B0FF;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{
+  min-height:100vh;overflow-x:hidden;
+  font-family:'Nunito',sans-serif;
+  background:var(--bg);color:#fff;
+}
+
+
+/* animated bg */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%,rgba(138,43,226,.25),transparent 60%),
+    radial-gradient(ellipse 50% 40% at 20% 80%,rgba(255,109,0,.12),transparent 60%),
+    radial-gradient(ellipse 40% 40% at 80% 60%,rgba(0,176,255,.1),transparent 60%);
+}
+
+/* floating lights */
+.bulb{
+  position:fixed;border-radius:50%;pointer-events:none;z-index:0;
+  animation:bulbFloat ease-in-out infinite;
+}
+@keyframes bulbFloat{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:.8;transform:scale(1.3)}}
+
+/* ── LAYOUT ── */
+#app{
+  position:relative;z-index:1;
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:16px 16px 40px;
+}
+
+/* ── HEADER ── */
+.header{text-align:center;margin-bottom:10px;}
+.header-title{
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(1.8rem,6vw,2.8rem);
+  letter-spacing:3px;
+  background:linear-gradient(135deg,#FFD700,#FF6D00,#FF3CAC,#FFD700);
+  background-size:200%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:titleShine 3s linear infinite;
+  filter:drop-shadow(0 0 10px rgba(255,165,0,.4));
+}
+@keyframes titleShine{0%{background-position:0%}100%{background-position:200%}}
+.header-sub{
+  font-size:.6rem;font-weight:800;letter-spacing:5px;
+  color:rgba(255,255,255,.3);margin-top:2px;
+}
+
+/* ── WHEEL CONTAINER ── */
+.wheel-wrap{
+  position:relative;
+  display:flex;flex-direction:column;align-items:center;
+  margin:8px 0;
+}
+
+/* outer ring glow */
+.wheel-ring{
+  position:relative;
+  padding:8px;
+  border-radius:50%;
+  background:conic-gradient(from 0deg,#FF1744,#FF6D00,#FFD700,#00E676,#00B0FF,#E040FB,#FF1744);
+  box-shadow:0 0 30px rgba(255,100,0,.5),0 0 60px rgba(255,100,0,.2);
+  animation:ringPulse 2s ease-in-out infinite;
+}
+@keyframes ringPulse{
+  0%,100%{box-shadow:0 0 30px rgba(255,100,0,.5),0 0 60px rgba(255,100,0,.2);}
+  50%{box-shadow:0 0 50px rgba(255,215,0,.7),0 0 80px rgba(255,215,0,.3);}
+}
+
+/* decorative bolts around ring */
+.bolt{
+  position:absolute;width:14px;height:14px;border-radius:50%;
+  background:radial-gradient(circle,#fff,#FFD700);
+  box-shadow:0 0 8px #FFD700;
+  animation:boltBlink 1s ease-in-out infinite;
+}
+@keyframes boltBlink{0%,100%{opacity:1}50%{opacity:.3}}
+
+#wheelCanvas{
+  display:block;border-radius:50%;
+  cursor:pointer;
+  transition:filter .3s;
+}
+#wheelCanvas:hover{filter:brightness(1.1);}
+
+/* center button */
+.center-btn{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:60px;height:60px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fff,#FFD700,#FF6D00);
+  border:4px solid rgba(255,255,255,.5);
+  box-shadow:0 0 20px rgba(255,165,0,.8),inset 0 2px 4px rgba(255,255,255,.6);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fredoka One',cursive;font-size:.65rem;letter-spacing:1px;color:#5a2d00;
+  transition:transform .1s;z-index:5;
+}
+.center-btn:active{transform:translate(-50%,-50%) scale(.9);}
+
+/* pointer */
+.pointer-wrap{
+  position:absolute;top:-2px;left:50%;transform:translateX(-50%);
+  z-index:10;filter:drop-shadow(0 2px 8px rgba(255,23,68,.8));
+}
+.pointer-svg{width:32px;height:40px;}
+
+/* ── SPIN BUTTON ── */
+.spin-btn{
+  font-family:'Fredoka One',cursive;
+  font-size:1.4rem;letter-spacing:3px;
+  background:linear-gradient(135deg,#FF6D00,#FF3CAC);
+  border:none;border-radius:50px;
+  padding:14px 56px;color:#fff;cursor:pointer;
+  box-shadow:0 6px 28px rgba(255,109,0,.5),0 4px 0 #8b0000;
+  transition:all .15s;margin-top:12px;
+  position:relative;overflow:hidden;
+}
+.spin-btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);
+}
+.spin-btn:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 10px 32px rgba(255,109,0,.7),0 4px 0 #8b0000;}
+.spin-btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 12px rgba(255,109,0,.4),0 1px 0 #8b0000;}
+.spin-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* sound btn */
+.sound-btn{
+  background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.15);
+  border-radius:50px;padding:7px 20px;color:rgba(255,255,255,.5);
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.75rem;letter-spacing:2px;
+  cursor:pointer;transition:all .2s;margin-bottom:10px;
+}
+.sound-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
+.sound-btn.active{border-color:rgba(0,230,118,.4);color:#00E676;background:rgba(0,230,118,.08);}
+
+/* history */
+.history{
+  margin-top:14px;width:100%;max-width:420px;
+  background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);
+  border-radius:20px;padding:12px 14px;
+}
+.hist-title{font-size:.55rem;font-weight:800;letter-spacing:3px;color:rgba(255,255,255,.3);margin-bottom:8px;}
+.hist-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.hist-row:last-child{border-bottom:none;}
+.hist-num{font-family:'Fredoka One',cursive;font-size:.75rem;color:rgba(255,255,255,.25);width:20px;}
+.hist-prize{font-family:'Fredoka One',cursive;font-size:.95rem;}
+.hist-time{font-size:.6rem;font-weight:700;color:rgba(255,255,255,.2);margin-left:auto;}
+.no-hist{font-size:.75rem;font-weight:700;color:rgba(255,255,255,.2);text-align:center;padding:8px 0;}
+
+/* ── OVERLAY ── */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);
+  display:none;align-items:center;justify-content:center;
+  z-index:9999;backdrop-filter:blur(6px);padding:20px;
+}
+.popup{
+  background:linear-gradient(135deg,#1a0535,#2d0f5c);
+  border:2px solid rgba(255,255,255,.12);
+  border-radius:28px;padding:28px 24px;
+  text-align:center;width:100%;max-width:340px;
+  animation:popIn .4s cubic-bezier(.34,1.56,.64,1);
+  position:relative;overflow:hidden;
+}
+.popup::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(255,165,0,.1),transparent 60%);
+  pointer-events:none;
+  border-radius:28px;
+}
+@keyframes popIn{from{transform:scale(.5) rotate(-5deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+
+.popup-ico{font-size:3.5rem;display:block;margin-bottom:8px;animation:icoJump .6s cubic-bezier(.34,1.56,.64,1);}
+@keyframes icoJump{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(0)}}
+.popup-label{font-size:.55rem;font-weight:800;letter-spacing:4px;color:rgba(255,255,255,.4);margin-bottom:6px;}
+.popup-prize{
+  font-family:'Fredoka One',cursive;
+  font-size:3rem;line-height:1;
+  animation:prizeIn .5s .2s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes prizeIn{from{transform:scale(0)}to{transform:scale(1)}}
+.popup-prize.zonk{color:#FF5252;text-shadow:0 0 20px rgba(255,23,68,.5);}
+.popup-prize.small{color:#40C4FF;text-shadow:0 0 20px rgba(0,176,255,.5);}
+.popup-prize.medium{color:#00E676;text-shadow:0 0 20px rgba(0,230,118,.5);}
+.popup-prize.big{color:#FFD700;text-shadow:0 0 30px rgba(255,215,0,.7);}
+.popup-prize.jackpot{
+  color:#FFD700;
+  text-shadow:0 0 30px #FFD700,0 0 60px rgba(255,215,0,.5);
+  animation:prizeIn .5s .2s cubic-bezier(.34,1.56,.64,1) both, jackpotPulse 1s .7s ease-in-out infinite;
+}
+@keyframes jackpotPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+.popup-sub{font-size:.8rem;font-weight:700;color:rgba(255,255,255,.4);margin-top:8px;}
+.close-btn{
+  margin-top:18px;font-family:'Fredoka One',cursive;font-size:1.1rem;letter-spacing:2px;
+  background:linear-gradient(135deg,#FF6D00,#FF3CAC);
+  border:none;border-radius:50px;padding:12px 40px;color:#fff;cursor:pointer;
+  box-shadow:0 4px 20px rgba(255,109,0,.4);transition:all .15s;
+}
+.close-btn:hover{transform:translateY(-2px);}
+
+/* shake */
+.shake{animation:shk .5s ease;}
+@keyframes shk{0%,100%{transform:translateX(0)}20%{transform:translateX(-15px)}40%{transform:translateX(15px)}60%{transform:translateX(-10px)}80%{transform:translateX(10px)}}
+
+/* confetti canvas */
+#confCv{position:fixed;inset:0;pointer-events:none;z-index:50;display:none;}
+
+/* spinning glow effect */
+@keyframes wheelSpin{
+  0%{box-shadow:0 0 30px rgba(255,100,0,.5);}
+  50%{box-shadow:0 0 60px rgba(255,215,0,.9),0 0 100px rgba(255,215,0,.4);}
+  100%{box-shadow:0 0 30px rgba(255,100,0,.5);}
+}
+.spinning .wheel-ring{animation:ringPulse 2s ease-in-out infinite, wheelSpin .3s ease-in-out infinite;}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="header">
+    <div class="header-title">🎡 SPIN THE WHEEL</div>
+    <div class="header-sub">PUTAR DAN MENANGKAN HADIAH!</div>
+  </div>
+
+  <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔇 AKTIFKAN SUARA</button>
+
+  <div class="wheel-wrap" id="wheelWrap">
+    <!-- pointer -->
+    <div class="pointer-wrap">
+      <svg class="pointer-svg" viewBox="0 0 32 40">
+        <polygon points="16,38 2,4 30,4" fill="#FF1744" stroke="#fff" stroke-width="2"/>
+        <circle cx="16" cy="6" r="5" fill="#FF1744" stroke="#fff" stroke-width="2"/>
+        <circle cx="16" cy="6" r="2" fill="#fff"/>
+      </svg>
+    </div>
+
+    <!-- outer glow ring -->
+    <div class="wheel-ring" id="wheelRing">
+      <canvas id="wheelCanvas" width="300" height="300"></canvas>
+      <div class="center-btn" onclick="spin()">SPIN!</div>
+    </div>
+  </div>
+
+  <button class="spin-btn" id="spinBtn" onclick="spin()">🎡 PUTAR!</button>
+
+  <div class="history">
+    <div class="hist-title">— RIWAYAT PUTARAN —</div>
+    <div id="histList"><div class="no-hist">Belum ada putaran</div></div>
+  </div>
+</div>
+
+<!-- Popup -->
+<div class="overlay" id="overlay">
+  <div class="popup" id="popup">
+    <span class="popup-ico" id="popIco"></span>
+    <div class="popup-label">KAMU MENDAPAT</div>
+    <div class="popup-prize" id="popPrize"></div>
+    <div class="popup-sub" id="popSub"></div>
+    <button class="close-btn" onclick="closePopup()">LANJUT!</button>
+  </div>
+</div>
+
+<canvas id="confCv"></canvas>
+
+<!-- decorative bulbs -->
+<script>
+const bulbColors=['#FF1744','#FF6D00','#FFD700','#00E676','#00B0FF','#E040FB'];
+for(let i=0;i<20;i++){
+  const b=document.createElement('div');
+  b.className='bulb';
+  const size=4+Math.random()*6;
+  const col=bulbColors[i%bulbColors.length];
+  b.style.cssText=`width:${size}px;height:${size}px;background:${col};box-shadow:0 0 ${size*2}px ${col};
+    left:${Math.random()*100}%;top:${Math.random()*100}%;
+    animation-duration:${1.5+Math.random()*2}s;animation-delay:${-Math.random()*2}s;`;
+  document.body.appendChild(b);
+}
+</script>
+
+<script>
+// =============================================
+// PRIZES
+// =============================================
+const SEGMENTS = [
+  {label:'ZONK',     color:'#c62828', textColor:'#ffcdd2', emoji:'💀', type:'zonk'},
+  {label:'Rp 2.000', color:'#1565c0', textColor:'#fff',    emoji:'💙', type:'small'},
+  {label:'Rp 5.000', color:'#2e7d32', textColor:'#fff',    emoji:'💚', type:'small'},
+  {label:'ZONK',     color:'#c62828', textColor:'#ffcdd2', emoji:'💀', type:'zonk'},
+  {label:'Rp 2.000', color:'#6a1b9a', textColor:'#fff',    emoji:'💜', type:'small'},
+  {label:'Rp 50.000',color:'#e65100', textColor:'#fff',    emoji:'🔥', type:'medium'},
+  {label:'Rp 5.000', color:'#00695c', textColor:'#fff',    emoji:'💚', type:'small'},
+  {label:'ZONK',     color:'#b71c1c', textColor:'#ffcdd2', emoji:'💀', type:'zonk'},
+  {label:'Rp 2.000', color:'#0d47a1', textColor:'#fff',    emoji:'💙', type:'small'},
+  {label:'Rp 5.000', color:'#1b5e20', textColor:'#fff',    emoji:'💚', type:'small'},
+  {label:'Rp 100.000',color:'#f57f17',textColor:'#000',    emoji:'👑', type:'jackpot'},
+  {label:'Rp 2.000', color:'#4a148c', textColor:'#fff',    emoji:'💜', type:'small'},
+  {label:'ZONK',     color:'#c62828', textColor:'#ffcdd2', emoji:'💀', type:'zonk'},
+  {label:'Rp 5.000', color:'#006064', textColor:'#fff',    emoji:'💚', type:'small'},
+  {label:'Rp 50.000',color:'#bf360c', textColor:'#fff',    emoji:'🔥', type:'medium'},
+];
+
+const N = SEGMENTS.length;
+const ARC = (2 * Math.PI) / N;
+const POPUP_CFG = {
+  zonk:    {ico:'😭', sub:'Yah... lebih beruntung lain kali!',    btnTxt:'Coba Lagi'},
+  small:   {ico:'😊', sub:'Lumayan! Kamu beruntung hari ini!',     btnTxt:'Lanjut!'},
+  medium:  {ico:'🎉', sub:'Wah besar! Selamat ya!',               btnTxt:'Hore!'},
+  jackpot: {ico:'🏆', sub:'JACKPOT! Kamu dapat hadiah terbesar!', btnTxt:'YEAY!!!'},
+};
+
+// =============================================
+// CANVAS
+// =============================================
+const cv = document.getElementById('wheelCanvas');
+const ctx = cv.getContext('2d');
+const CX = 150, CY = 150, R = 148;
+
+function drawWheel(rot){
+  ctx.clearRect(0,0,300,300);
+
+  // Draw segments
+  for(let i=0;i<N;i++){
+    const start = rot + i*ARC;
+    const end   = rot + (i+1)*ARC;
+    const seg   = SEGMENTS[i];
+
+    // Segment fill
+    ctx.beginPath();
+    ctx.moveTo(CX,CY);
+    ctx.arc(CX,CY,R,start,end);
+    ctx.closePath();
+    ctx.fillStyle=seg.color;
+    ctx.fill();
+
+    // Subtle gradient overlay
+    const grd=ctx.createRadialGradient(CX,CY,R*.2,CX,CY,R);
+    grd.addColorStop(0,'rgba(255,255,255,.15)');
+    grd.addColorStop(1,'rgba(0,0,0,.2)');
+    ctx.fillStyle=grd;
+    ctx.fill();
+
+    // Segment border
+    ctx.beginPath();
+    ctx.moveTo(CX,CY);
+    ctx.arc(CX,CY,R,start,end);
+    ctx.closePath();
+    ctx.strokeStyle='rgba(255,255,255,.2)';
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+
+    // Text
+    ctx.save();
+    ctx.translate(CX,CY);
+    ctx.rotate(start + ARC/2);
+    ctx.textAlign='right';
+    ctx.textBaseline='middle';
+
+    // Text shadow
+    ctx.shadowColor='rgba(0,0,0,.6)';
+    ctx.shadowBlur=4;
+
+    if(seg.type==='jackpot'){
+      ctx.font='bold 13px Fredoka One, cursive';
+      ctx.fillStyle='#FFD700';
+      ctx.fillText(seg.label, R-8, 0);
+    } else if(seg.type==='zonk'){
+      ctx.font='bold 15px Fredoka One, cursive';
+      ctx.fillStyle='#FFCDD2';
+      ctx.fillText('ZONK', R-8, 0);
+    } else {
+      ctx.font='bold 12px Nunito, sans-serif';
+      ctx.fillStyle=seg.textColor;
+      ctx.fillText(seg.label, R-8, 0);
+    }
+    ctx.shadowBlur=0;
+    ctx.restore();
+  }
+
+  // Center circle
+  const cg=ctx.createRadialGradient(CX-10,CY-10,2,CX,CY,28);
+  cg.addColorStop(0,'#fff');
+  cg.addColorStop(.5,'#FFD700');
+  cg.addColorStop(1,'#FF6D00');
+  ctx.beginPath();ctx.arc(CX,CY,28,0,Math.PI*2);
+  ctx.fillStyle=cg;
+  ctx.shadowColor='rgba(255,165,0,.8)';ctx.shadowBlur=15;
+  ctx.fill();ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=3;ctx.stroke();
+}
+
+drawWheel(0);
+
+// =============================================
+// AUDIO
+// =============================================
+let _ac=null, soundOn=false;
+function ac(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume();return _ac;}
+function beep(f,d,t,v,dl){try{const a=ac(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type=t||'sine';o.frequency.setValueAtTime(f,a.currentTime+(dl||0));g.gain.setValueAtTime(v||.3,a.currentTime+(dl||0));g.gain.exponentialRampToValueAtTime(.001,a.currentTime+(dl||0)+d);o.start(a.currentTime+(dl||0));o.stop(a.currentTime+(dl||0)+d+.05);}catch(e){}}
+
+function toggleSound(){
+  try{ac();soundOn=!soundOn;if(soundOn)beep(660,.1,'triangle',.3);}catch(e){}
+  const btn=document.getElementById('soundBtn');
+  btn.textContent=soundOn?'🔊 SUARA AKTIF':'🔇 AKTIFKAN SUARA';
+  btn.classList.toggle('active',soundOn);
+}
+
+function sndTick(pitch){if(!soundOn)return;beep(400+pitch*20,.03,'square',.15);}
+function sndZonk(){if(!soundOn)return;beep(300,.15,'sawtooth',.4);beep(200,.2,'sawtooth',.35,.1);beep(120,.3,'sawtooth',.3,.2);}
+function sndSmall(){if(!soundOn)return;[523,659,784].forEach((f,i)=>beep(f,.1,'triangle',.3,i*.09));}
+function sndMedium(){if(!soundOn)return;[523,659,784,1047].forEach((f,i)=>beep(f,.12,'triangle',.35,i*.09));}
+function sndJackpot(){if(!soundOn)return;[523,659,784,1047,1319,1568].forEach((f,i)=>beep(f,.15,'triangle',.45,i*.1));}
+
+// =============================================
+// SPIN
+// =============================================
+let rotation=0, spinning=false, spinAnim=null;
+let history=[];
+
+function spin(){
+  if(spinning) return;
+  spinning=true;
+  try{ac();}catch(e){}
+  document.getElementById('spinBtn').disabled=true;
+  document.getElementById('wheelWrap').classList.add('spinning');
+
+  const extraSpins = 7 + Math.random()*5;
+  const extraDeg   = Math.random()*360;
+  const totalDeg   = extraSpins*360 + extraDeg;
+  const totalRad   = totalDeg * Math.PI/180;
+  const duration   = 4500;
+  const startTime  = performance.now();
+  const startRot   = rotation;
+  const targetRot  = rotation + totalRad;
+
+  // tick sounds
+  let lastTick = -1;
+
+  function easeOut(t){ return 1 - Math.pow(1-t, 4); }
+
+  function frame(now){
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed/duration, 1);
+    const eased = easeOut(t);
+    rotation = startRot + totalRad*eased;
+    drawWheel(rotation);
+
+    // tick sound
+    const seg = Math.floor(((rotation % (2*Math.PI)) / ARC));
+    if(seg !== lastTick){ lastTick=seg; sndTick(t*10); }
+
+    if(t < 1){ spinAnim = requestAnimationFrame(frame); }
+    else{ onSpinEnd(); }
+  }
+  spinAnim = requestAnimationFrame(frame);
+}
+
+function onSpinEnd(){
+  spinning=false;
+  document.getElementById('spinBtn').disabled=false;
+  document.getElementById('wheelWrap').classList.remove('spinning');
+
+  // Determine result — pointer is at top (rotation=0 means first segment at top-right)
+  // Pointer at 270deg (top). Wheel rotated by `rotation`
+  const norm = ((rotation % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+  const pointerAngle = (Math.PI*1.5 - norm + Math.PI*4) % (2*Math.PI);
+  const idx = Math.floor(pointerAngle / ARC) % N;
+  const seg = SEGMENTS[idx];
+
+  // Add to history
+  history.unshift({label:seg.label, type:seg.type, time:new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})});
+  if(history.length>5) history.pop();
+  renderHistory();
+
+  // Show popup
+  setTimeout(()=>showPopup(seg), 300);
+}
+
+// =============================================
+// POPUP
+// =============================================
+function showPopup(seg){
+  const cfg=POPUP_CFG[seg.type];
+  document.getElementById('popIco').textContent=cfg.ico;
+  const prizeEl=document.getElementById('popPrize');
+  prizeEl.textContent=seg.label;
+  prizeEl.className='popup-prize '+seg.type;
+  document.getElementById('popSub').textContent=cfg.sub;
+
+  const popup=document.getElementById('popup');
+  popup.classList.remove('shake');
+
+  if(seg.type==='zonk'){
+    sndZonk();
+    void popup.offsetWidth;
+    popup.classList.add('shake');
+  } else if(seg.type==='jackpot'){
+    sndJackpot();
+    launchConf();
+    launchConf();
+  } else if(seg.type==='medium'){
+    sndMedium();
+    launchConf();
+  } else {
+    sndSmall();
+  }
+
+  document.getElementById('overlay').style.display='flex';
+}
+
+function closePopup(){
+  document.getElementById('overlay').style.display='none';
+}
+
+// =============================================
+// HISTORY
+// =============================================
+function renderHistory(){
+  const list=document.getElementById('histList');
+  if(history.length===0){ list.innerHTML='<div class="no-hist">Belum ada putaran</div>'; return; }
+  const colors={zonk:'#FF5252',small:'#40C4FF',medium:'#00E676',jackpot:'#FFD700'};
+  list.innerHTML=history.map((h,i)=>`
+    <div class="hist-row">
+      <div class="hist-num">${i+1}</div>
+      <div class="hist-prize" style="color:${colors[h.type]}">${h.label}</div>
+      <div class="hist-time">${h.time}</div>
+    </div>`).join('');
+}
+
+// =============================================
+// CONFETTI
+// =============================================
+const ccv=document.getElementById('confCv');
+const cctx=ccv.getContext('2d');
+let cp=[],cr=null;
+function launchConf(){
+  ccv.style.display='block';
+  ccv.width=window.innerWidth;ccv.height=window.innerHeight;
+  const cols=['#FFD700','#FF3CAC','#00E676','#00B0FF','#FF6D00','#E040FB','#fff'];
+  for(let i=0;i<120;i++) cp.push({x:Math.random()*ccv.width,y:-20,vx:(Math.random()-.5)*8,vy:2+Math.random()*6,r:3+Math.random()*7,col:cols[i%cols.length],rot:Math.random()*360,rv:(Math.random()-.5)*12});
+  cancelAnimationFrame(cr);animC();
+  setTimeout(()=>{cancelAnimationFrame(cr);cctx.clearRect(0,0,ccv.width,ccv.height);cp=[];ccv.style.display='none';},5000);
+}
+function animC(){
+  cctx.clearRect(0,0,ccv.width,ccv.height);
+  cp.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.rot+=p.rv;cctx.save();cctx.translate(p.x,p.y);cctx.rotate(p.rot*Math.PI/180);cctx.fillStyle=p.col;cctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);cctx.restore();});
+  cp=cp.filter(p=>p.y<ccv.height+30);
+  if(cp.length>0) cr=requestAnimationFrame(animC);
+}
+
+window.addEventListener('touchstart',()=>{try{ac();}catch(e){}},{once:false,passive:true});
+</script>
+</body>
+</html>
